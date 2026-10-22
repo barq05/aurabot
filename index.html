@@ -54,12 +54,11 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:6
 @media(max-width:860px){.hero{grid-template-columns:1fr;text-align:center}.hero p{margin-inline:auto}.cta{justify-content:center}}
 
 /* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
 .stat{background:#2a117099;border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center}
 .stat b{display:block;font-size:2rem;color:var(--pink);font-weight:700;line-height:1.3}
 .stat small{color:var(--mute)}
 .stat.live b::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#4ade80;margin-inline-start:8px;box-shadow:0 0 10px #4ade80;vertical-align:middle}
-@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
 
 section{padding:64px 0}
 h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px}
@@ -77,13 +76,11 @@ h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px}
 .price{position:relative;display:flex;flex-direction:column}
 .price .amt{font-size:2.2rem;font-weight:700;margin:6px 0}
 .price .amt small{font-size:.9rem;color:var(--mute);font-weight:300}
-.price ul{list-style:none;padding:0;margin:12px 0 22px;color:var(--mute);font-size:.95rem;flex:1}
-.price li{padding:5px 0;border-bottom:1px dashed #4c2fb066}
-.price li::before{content:"✓";color:var(--pink);margin-inline-end:8px}
+.price p.d{flex:1;color:var(--mute);font-size:.95rem;margin:6px 0 18px}
 .price.hot{border-color:var(--pink);box-shadow:0 0 40px #e879f933}
 .tag{position:absolute;top:-13px;inset-inline-start:22px;background:var(--pink);color:#2a0a55;font-size:.8rem;font-weight:700;padding:2px 14px;border-radius:99px}
 
-/* permissions */
+/* permissions calculator */
 .perm{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
 .panel{background:#1d0a52;border:1px solid var(--line);border-radius:20px;padding:24px}
 .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
@@ -105,17 +102,43 @@ details{background:#2a117088;border:1px solid var(--line);border-radius:14px;pad
 summary{cursor:pointer;font-weight:600}
 details p{color:var(--mute);margin-top:8px}
 footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-align:center;font-size:.9rem}
-.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,90px);background:var(--pink);color:#2a0a55;padding:10px 22px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:50}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,90px);background:var(--pink);color:#2a0a55;padding:10px 22px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:50;max-width:92vw;text-align:center}
 .toast.show{transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto}}
+
+/* auth / dashboard / tickets */
+[hidden]{display:none!important}
+.user{display:flex;align-items:center;gap:10px}
+.user img{width:34px;height:34px;border-radius:50%;border:2px solid var(--pink)}
+.badge{font-size:.75rem;padding:2px 12px;border-radius:99px;background:var(--violet);color:#fff;white-space:nowrap}
+.badge.owner{background:linear-gradient(135deg,#f59e0b,var(--pink))}
+.badge.admin{background:#db2777}.badge.support{background:#0891b2}.badge.closed{background:#475569}
+.btn.sm{padding:6px 14px;font-size:.85rem;border-radius:10px}
+.btn.red{background:#be123c;color:#fff}
+.field{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin-bottom:10px}
+textarea.field{min-height:100px;resize:vertical}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.item{background:#2a117088;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}
+.reply{margin:8px 0;padding:8px 12px;border-radius:10px;background:#150538;border-inline-start:3px solid var(--line);font-size:.92rem}
+.reply.staff{border-color:var(--pink)}
+.reply small{color:var(--mute)}
+.modal{position:fixed;inset:0;background:#0b0221d9;display:grid;place-items:center;z-index:40;padding:16px}
+.modal .box{background:#1d0a52;border:1px solid var(--pink);border-radius:20px;padding:26px;max-width:460px;width:100%;max-height:90vh;overflow:auto}
+.pm{display:block;padding:12px 14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.pm small{display:block;color:var(--mute);margin-inline-start:26px}
+.pm input{accent-color:var(--pink);margin-inline-end:8px}
+.warn{background:#7c2d12;color:#ffedd5;padding:12px 20px;text-align:center;font-size:.92rem}
 </style>
 </head>
 <body>
 
+<div class="warn" id="setupWarn" hidden>الموقع لسه مش متربط بـ Firebase. حط إعدادات المشروع في الكود (firebaseConfig) عشان تسجيل الدخول والمنتجات والدعم يشتغلوا.</div>
+
 <nav><div class="wrap">
   <a href="#top" class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'">BOTAURA</a>
-  <div class="links"><a href="#services">الخدمات</a><a href="#pricing">الأسعار</a><a href="#permissions">الصلاحيات</a><a href="#faq">الأسئلة</a></div>
-  <a class="btn main" data-discord href="#contact">تواصل معنا</a>
+  <div class="links"><a href="#services">الخدمات</a><a href="#pricing">المنتجات</a><a href="#payments">الدفع</a><a href="#support">الدعم</a><a href="#permissions">حاسبة الصلاحيات</a></div>
+  <div id="auth"></div>
 </div></nav>
 
 <main id="top" class="wrap">
@@ -157,12 +180,11 @@ footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-alig
   </div>
 
   <div class="stats">
-    <div class="stat live"><b id="visits">...</b><small>زيارة للموقع</small></div>
+    <div class="stat live" id="visitsBox" hidden><b id="visits">...</b><small>زيارة للموقع (للإدارة فقط)</small></div>
     <div class="stat"><b data-count="120">0</b><small>بوت تم تسليمه</small></div>
     <div class="stat"><b data-count="85">0</b><small>سيرفر بنتابعه</small></div>
     <div class="stat"><b>24/7</b><small>دعم فني</small></div>
   </div>
-  <p class="note" style="margin-bottom:0">الأرقام التجريبية (بوت / سيرفر) غيّرها من الكود بأرقامك الحقيقية.</p>
 
   <section id="services">
     <h2>إيه اللي بنقدمه؟</h2>
@@ -178,23 +200,13 @@ footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-alig
   </section>
 
   <section id="pricing">
-    <h2>الباقات</h2>
-    <p class="sub">الأسعار المكتوبة تجريبية، عدّلها من الكود بأسعارك.</p>
-    <div class="grid">
-      <div class="card price"><h3>بوت جاهز</h3><div class="amt">150 <small>ج.م / مرة واحدة</small></div>
-        <ul><li>اختيار بوت من القوالب</li><li>إضافته لسيرفرك</li><li>شرح استخدام</li></ul>
-        <a class="btn ghost" data-discord href="#contact">اطلب الآن</a></div>
-      <div class="card price hot"><span class="tag">الأكثر طلباً</span><h3>بوت مخصص</h3><div class="amt">500 <small>ج.م ويزيد حسب الطلب</small></div>
-        <ul><li>مزايا حسب طلبك</li><li>اسم وصورة خاصة بالبوت</li><li>استضافة شهر مجاناً</li><li>تعديلات بعد التسليم</li></ul>
-        <a class="btn main" data-discord href="#contact">اطلب الآن</a></div>
-      <div class="card price"><h3>دعم فني</h3><div class="amt">100 <small>ج.م / شهرياً</small></div>
-        <ul><li>صيانة وتحديث البوت</li><li>رد خلال ساعات</li><li>مساعدة في ضبط السيرفر</li></ul>
-        <a class="btn ghost" data-discord href="#contact">اشترك</a></div>
-    </div>
+    <h2>المنتجات</h2>
+    <p class="sub">اختار المنتج واضغط اشتري. لازم تسجّل دخول بحساب جوجل.</p>
+    <div class="grid" id="products"></div>
   </section>
 
   <section id="permissions">
-    <h2>صلاحيات البوت</h2>
+    <h2>حاسبة صلاحيات بوت ديسكورد</h2>
     <p class="sub">اختار الصلاحيات اللي البوت محتاجها، وهنطلعلك رابط الدعوة جاهز. اعطي البوت اللي يحتاجه بس، ده أأمن لسيرفرك.</p>
     <div class="perm">
       <div class="panel">
@@ -214,6 +226,36 @@ footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-alig
     </div>
   </section>
 
+  <section id="payments">
+    <h2>طرق الدفع</h2>
+    <p class="sub">الدفع يدوي: حوّل المبلغ بأي طريقة من دول، وأكّد الطلب في الموقع، والإدارة بتفعّله بعد التأكد.</p>
+    <div class="grid" id="payList"></div>
+  </section>
+
+  <section id="support">
+    <h2>الدعم الفني والبلاغات</h2>
+    <p class="sub">ابعت طلب دعم أو بلاغ وتابع الرد من هنا.</p>
+    <div class="perm">
+      <div class="panel">
+        <div id="tkLogin"><p class="note" style="margin:0 0 14px">لازم تسجّل دخول الأول عشان تبعت طلب.</p><button class="btn main" data-login>تسجيل الدخول بجوجل</button></div>
+        <div id="tkForm" hidden>
+          <select class="field" id="tkType"><option value="support">طلب دعم فني</option><option value="report">بلاغ</option></select>
+          <input class="field" id="tkSubject" placeholder="العنوان" maxlength="100">
+          <textarea class="field" id="tkMsg" placeholder="اشرح المشكلة أو البلاغ بالتفصيل" maxlength="1500"></textarea>
+          <button class="btn main" id="tkSend">إرسال</button>
+        </div>
+        <div id="myOrders" style="margin-top:22px"></div>
+      </div>
+      <div class="panel"><h3 style="margin-bottom:14px">تذاكري</h3><div id="myTickets"><p class="note">سجّل دخول لعرض تذاكرك.</p></div></div>
+    </div>
+  </section>
+
+  <section id="panel" hidden>
+    <h2>لوحة التحكم</h2><div style="height:16px"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="panel" id="tabBody"></div>
+  </section>
+
   <section id="faq">
     <h2>أسئلة شائعة</h2><div style="height:18px"></div>
     <details><summary>أستلم البوت إزاي؟</summary><p>بنضيفه لسيرفرك بنفسنا، أو نسلمك التوكن والملفات لو الاستضافة عندك.</p></details>
@@ -229,36 +271,19 @@ footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-alig
 </main>
 
 <footer>© <span id="yr"></span> BOTAURA، بوتات ديسكورد</footer>
+<div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 <div class="toast" id="toast">تم النسخ</div>
 
 <script>
 /* ===== الإعدادات: عدّل هنا ===== */
-const DISCORD_INVITE = "https://discord.gg/GFNU9pzbMK";   // حط رابط سيرفرك
-const COUNTER_NS = "botaura-barq05";                            // اسم العداد (غيّره لو حبيت)
+const DISCORD_INVITE = "https://discord.gg/PUT_YOUR_INVITE";   // حط رابط سيرفرك
 
 document.getElementById('yr').textContent = new Date().getFullYear();
-document.querySelectorAll('[data-discord]').forEach(a => { a.href = DISCORD_INVITE; a.target = '_blank'; a.rel = 'noopener'; });
+document.querySelectorAll('[data-discord]').forEach(a => { a.href = DISCORD_INVITE; });
 
-/* عداد الزيارات: زيادة مرة لكل متصفح، وبديل محلي لو الخدمة وقعت */
 const ar = n => Number(n).toLocaleString('ar-EG');
-async function visits(){
-  const el = document.getElementById('visits');
-  let seen = false; try { seen = localStorage.getItem('ba_seen') === '1'; } catch(e){}
-  const base = `https://api.counterapi.dev/v1/${COUNTER_NS}/visits/`;
-  try{
-    const r = await fetch(base + (seen ? '' : 'up'));
-    const d = await r.json();
-    if (typeof d.count !== 'number') throw 0;
-    try { localStorage.setItem('ba_seen','1'); } catch(e){}
-    el.textContent = ar(d.count);
-  }catch(e){
-    let n = 1; try { n = (+localStorage.getItem('ba_local')||0) + (seen?0:1); localStorage.setItem('ba_local', n); localStorage.setItem('ba_seen','1'); } catch(_){}
-    el.textContent = ar(n);
-  }
-}
-visits();
 
-/* عدّاد أرقام متحرك */
+/* عدّاد أرقام متحرك (غيّر data-count بأرقامك الحقيقية) */
 document.querySelectorAll('[data-count]').forEach(el=>{
   const to = +el.dataset.count; let n = 0;
   const io = new IntersectionObserver(([e])=>{ if(!e.isIntersecting) return; io.disconnect();
@@ -308,8 +333,234 @@ presets.firstChild.click();
 document.getElementById('copy').onclick = async ()=>{
   const v = document.getElementById('plink').value; if(!/^https/.test(v)) return;
   try{ await navigator.clipboard.writeText(v); }catch(e){ document.getElementById('plink').select(); document.execCommand('copy'); }
-  const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
+  const t = document.getElementById('toast'); t.textContent='تم النسخ'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
 };
+</script>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ===== الصق إعدادات Firebase هنا ===== */
+const firebaseConfig = {
+  apiKey: "PASTE_API_KEY",
+  authDomain: "PASTE_PROJECT.firebaseapp.com",
+  projectId: "PASTE_PROJECT_ID",
+  storageBucket: "PASTE_PROJECT.appspot.com",
+  messagingSenderId: "PASTE",
+  appId: "PASTE"
+};
+const OWNER_EMAIL = "barqelhadidy@gmail.com";
+/* ================================== */
+
+const ok = !firebaseConfig.apiKey.startsWith("PASTE");
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = n => Number(n).toLocaleString("ar-EG");
+const RANK = {buyer:0, support:1, admin:2, owner:3};
+const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر"};
+const ORDER_AR = {pending:"قيد المراجعة", paid:"تم الدفع", done:"تم التسليم", cancelled:"ملغي"};
+const ms = t => t?.toMillis?.() ?? t ?? 0;
+const say = m => { const t = $("toast"); t.textContent = m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), 2600); };
+const run = fn => fn().catch(e => { console.error(e); say("ما نفعش: " + (e.code || e.message)); });
+const safeSet = (el, html) => { if (el.contains(document.activeElement) && document.activeElement.value) return; el.innerHTML = html; };
+
+const DEF_PRODUCTS = [
+  {id:"d1", name:"بوت جاهز", desc:"اختيار بوت من القوالب وإضافته لسيرفرك مع شرح الاستخدام.", price:150},
+  {id:"d2", name:"بوت مخصص", desc:"مزايا حسب طلبك، اسم وصورة خاصة، واستضافة شهر.", price:500, hot:true},
+  {id:"d3", name:"دعم فني شهري", desc:"صيانة وتحديث البوت ومساعدة في ضبط السيرفر.", price:100}
+];
+const DEF_PAY = [
+  {name:"فودافون كاش", details:"الأونر لسه ما ضافش الرقم"},
+  {name:"إنستاباي", details:"الأونر لسه ما ضافش العنوان"}
+];
+
+let auth, db, user = null, role = "buyer", unsubs = [];
+let products = [], pay = DEF_PAY, payEdit = [];
+let myTickets = [], myOrders = [], staffTickets = [], orders = [], usersList = [], curTab = "tickets";
+
+if (ok) { const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }
+else $("setupWarn").hidden = false;
+
+/* ---------- تسجيل الدخول ---------- */
+async function login() {
+  if (!ok) return say("لازم تربط Firebase الأول");
+  const p = new GoogleAuthProvider(); p.setCustomParameters({prompt:"select_account"});
+  try { await signInWithPopup(auth, p); }
+  catch (e) {
+    if (e.code === "auth/popup-blocked") signInWithRedirect(auth, p);
+    else if (e.code === "auth/unauthorized-domain") say("الدومين مش مضاف في Firebase ← Authorized domains");
+    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") say("فشل تسجيل الدخول: " + e.code);
+  }
+}
+
+/* ---------- العرض ---------- */
+function renderAuth() {
+  $("auth").innerHTML = user
+    ? `<div class="user"><img src="${esc(user.photoURL||"")}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'"><span class="badge ${role}">${ROLE_AR[role]}</span><button class="btn ghost sm" id="logout">خروج</button></div>`
+    : `<button class="btn main" data-login>تسجيل الدخول</button>`;
+  $("visitsBox").hidden = !(user && RANK[role] >= 2);
+}
+const curProducts = () => products.length ? products : DEF_PRODUCTS;
+function renderProducts() {
+  $("products").innerHTML = curProducts().map(p => `<div class="card price ${p.hot?"hot":""}">${p.hot?'<span class="tag">الأكثر طلباً</span>':""}<h3>${esc(p.name)}</h3><div class="amt">${num(p.price)} <small>ج.م</small></div><p class="d">${esc(p.desc)}</p><button class="btn ${p.hot?"main":"ghost"}" data-buy="${esc(p.id)}">اشتري</button></div>`).join("");
+}
+function renderPayments() {
+  $("payList").innerHTML = pay.map(m => `<div class="card"><div class="ic">💳</div><h3>${esc(m.name)}</h3><p style="direction:ltr;text-align:right">${esc(m.details)}</p></div>`).join("");
+}
+function ticketHTML(t, staff) {
+  return `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(t.subject)}</b><span class="badge ${t.status==="open"?"":"closed"}">${t.type==="report"?"بلاغ":"دعم"} · ${t.status==="open"?"مفتوحة":"مغلقة"}</span></div>${staff?`<small class="note">${esc(t.name)} · ${esc(t.email)}</small>`:""}<p style="margin:8px 0">${esc(t.message)}</p>${(t.replies||[]).map(r=>`<div class="reply ${r.staff?"staff":""}"><small>${esc(r.name)} (${ROLE_AR[r.role]||""})</small><div>${esc(r.text)}</div></div>`).join("")}<div class="row"><input class="field" style="flex:1;margin:0" data-rt="${t.id}" placeholder="اكتب رد"><button class="btn main sm" data-reply="${t.id}">رد</button>${staff?`<button class="btn ghost sm" data-toggle="${t.id}">${t.status==="open"?"إغلاق":"إعادة فتح"}</button>`:""}</div></div>`;
+}
+const byNew = (a, b) => ms(b.createdAt) - ms(a.createdAt);
+function renderSupport() {
+  $("tkLogin").hidden = !!user; $("tkForm").hidden = !user;
+  safeSet($("myTickets"), !user ? '<p class="note">سجّل دخول لعرض تذاكرك.</p>' : ([...myTickets].sort(byNew).map(t=>ticketHTML(t,false)).join("") || '<p class="note">مفيش تذاكر لسه.</p>'));
+  $("myOrders").innerHTML = user && myOrders.length ? `<h3 style="margin-bottom:10px">طلباتي</h3>` + [...myOrders].sort(byNew).map(o=>`<div class="item"><b>${esc(o.productName)}</b> · ${num(o.price)} ج.م<br><small class="note">${esc(o.method)} · ${ORDER_AR[o.status]||o.status}</small></div>`).join("") : "";
+}
+
+/* ---------- لوحة التحكم ---------- */
+const TABS = [["tickets","الدعم والبلاغات",1],["orders","الطلبات",2],["users","الرتب",2],["products","المنتجات",3],["payments","طرق الدفع",3]];
+function renderPanel() {
+  const r = RANK[role];
+  $("panel").hidden = !user || r < 1;
+  if ($("panel").hidden) return;
+  const allowed = TABS.filter(t => r >= t[2]);
+  if (!allowed.find(t => t[0] === curTab)) curTab = allowed[0][0];
+  $("tabs").innerHTML = allowed.map(t => `<button class="chip ${t[0]===curTab?"on":""}" data-tab="${t[0]}">${t[1]}${t[0]==="tickets"?` (${staffTickets.filter(x=>x.status==="open").length})`:""}</button>`).join("");
+  renderTab(true);
+}
+function renderTab(force) {
+  const el = $("tabBody");
+  if (!force && el.contains(document.activeElement) && document.activeElement.value) return;
+  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, users:tabUsers, products:tabProducts, payments:tabPayments}[curTab])();
+}
+const empty = '<p class="note">مفيش حاجة لسه.</p>';
+function tabTickets() {
+  return [...staffTickets].sort((a,b)=>(a.status===b.status?0:a.status==="open"?-1:1)||byNew(a,b)).map(t=>ticketHTML(t,true)).join("") || empty;
+}
+function tabOrders() {
+  return [...orders].sort(byNew).map(o=>`<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}</small></div>`).join("") || empty;
+}
+function tabUsers() {
+  const opts = role === "owner" ? ["buyer","support","admin"] : ["buyer","support"];
+  return `<p class="note" style="margin-top:0">الشخص بيظهر هنا بعد ما يسجّل دخول مرة.${role==="admin"?" الأدمن يقدر يغيّر بين مشتري ودعم فني فقط.":""}</p>` +
+  ([...usersList].sort(byNew).map(u=>{
+    const can = u.id !== user.uid && opts.includes(u.role);
+    return `<div class="item row" style="justify-content:space-between"><div><b>${esc(u.name||"بدون اسم")}</b><br><small class="note">${esc(u.email)}</small></div>${can?`<select class="field" style="width:auto;margin:0" data-role="${u.id}">${opts.map(r=>`<option value="${r}" ${u.role===r?"selected":""}>${ROLE_AR[r]}</option>`).join("")}</select>`:`<span class="badge ${u.role}">${ROLE_AR[u.role]||u.role}</span>`}</div>`;
+  }).join("") || empty);
+}
+function tabProducts() {
+  return `<div class="row"><input class="field" id="pName" placeholder="اسم المنتج" style="flex:2"><input class="field" id="pPrice" type="number" min="0" placeholder="السعر بالجنيه" style="flex:1"></div><textarea class="field" id="pDesc" placeholder="وصف المنتج"></textarea><label class="note"><input type="checkbox" id="pHot"> علامة "الأكثر طلباً"</label><br><br><button class="btn main" id="addProduct">إضافة المنتج</button><hr style="border:0;border-top:1px solid var(--line);margin:22px 0">` +
+  (products.map(p=>`<div class="item row" style="justify-content:space-between"><div><b>${esc(p.name)}</b> · ${num(p.price)} ج.م</div><button class="btn red sm" data-delp="${p.id}">حذف</button></div>`).join("") || '<p class="note">مفيش منتجات مضافة، الموقع بيعرض منتجات تجريبية لحد ما تضيف.</p>');
+}
+function tabPayments() {
+  return payEdit.map((m,i)=>`<div class="row"><input class="field" style="flex:1" data-pi="${i}" data-f="name" value="${esc(m.name)}" placeholder="الاسم (مثلاً فودافون كاش)"><input class="field" style="flex:2" data-pi="${i}" data-f="details" value="${esc(m.details)}" placeholder="الرقم أو التفاصيل"><button class="btn red sm" data-delpay="${i}" style="margin-bottom:10px">حذف</button></div>`).join("") + `<div class="row"><button class="btn ghost" id="addPay">إضافة طريقة</button><button class="btn main" id="savePay">حفظ</button></div>`;
+}
+function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); }
+
+/* ---------- شراء ---------- */
+function openBuy(p) {
+  if (!user) return login();
+  $("modalBox").innerHTML = `<h3>شراء: ${esc(p.name)}</h3><p>السعر: <b>${num(p.price)} ج.م</b></p><p class="note">اختار طريقة الدفع، حوّل المبلغ، وبعدين أكّد الطلب.</p>${pay.map((m,i)=>`<label class="pm"><input type="radio" name="pm" value="${i}" ${i===0?"checked":""}><b>${esc(m.name)}</b><small>${esc(m.details)}</small></label>`).join("")}<input class="field" id="onote" maxlength="200" placeholder="رقم العملية أو ملاحظة (اختياري)"><div class="row"><button class="btn main" id="confirmBuy">تأكيد الطلب</button><button class="btn ghost" data-close>إلغاء</button></div>`;
+  $("modal").hidden = false;
+  $("confirmBuy").onclick = () => run(async () => {
+    const m = pay[+document.querySelector('input[name=pm]:checked').value];
+    await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:Number(p.price), method:m.name, note:$("onote").value.trim(), status:"pending", createdAt:serverTimestamp()});
+    $("modalBox").innerHTML = `<h3>تم تسجيل طلبك</h3><p class="note">هتلاقيه في "طلباتي" تحت قسم الدعم. الإدارة هتراجع الدفع وتتواصل معاك.</p><button class="btn main" data-close>تمام</button>`;
+  });
+}
+
+/* ---------- الأحداث ---------- */
+document.addEventListener("click", e => {
+  const t = e.target, q = s => t.closest(s);
+  if (q("[data-login]")) return login();
+  if (q("#logout")) return run(() => signOut(auth));
+  if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
+  let b;
+  if ((b = q("[data-buy]"))) { const p = curProducts().find(x => String(x.id) === b.dataset.buy); return p && openBuy(p); }
+  if ((b = q("[data-tab]"))) { curTab = b.dataset.tab; if (curTab === "payments") payEdit = pay.map(x=>({...x})); return renderPanel(); }
+  if ((b = q("[data-reply]"))) return run(async () => {
+    const id = b.dataset.reply, inp = document.querySelector(`[data-rt="${id}"]`), text = inp.value.trim();
+    if (!text) return;
+    await updateDoc(doc(db,"tickets",id), {replies: arrayUnion({uid:user.uid, name:user.displayName||user.email, role, staff:RANK[role]>=1, text, at:Date.now()})});
+    inp.value = "";
+  });
+  if ((b = q("[data-toggle]"))) return run(async () => {
+    const tk = staffTickets.find(x => x.id === b.dataset.toggle);
+    await updateDoc(doc(db,"tickets",tk.id), {status: tk.status === "open" ? "closed" : "open"});
+  });
+  if (q("#addProduct")) return run(async () => {
+    const name = $("pName").value.trim(), price = Number($("pPrice").value);
+    if (!name || $("pPrice").value === "" || !(price >= 0)) return say("اكتب الاسم والسعر");
+    await addDoc(collection(db,"products"), {name, desc:$("pDesc").value.trim(), price, hot:$("pHot").checked, createdAt:serverTimestamp()});
+    say("تمت إضافة المنتج"); renderTab(true);
+  });
+  if ((b = q("[data-delp]"))) return confirm("تحذف المنتج؟") && run(() => deleteDoc(doc(db,"products",b.dataset.delp)));
+  if (q("#addPay")) { payEdit.push({name:"", details:""}); return renderTab(true); }
+  if ((b = q("[data-delpay]"))) { payEdit.splice(+b.dataset.delpay, 1); return renderTab(true); }
+  if (q("#savePay")) return run(async () => {
+    const methods = payEdit.filter(m => m.name.trim()).map(m => ({name:m.name.trim(), details:m.details.trim()}));
+    await setDoc(doc(db,"settings","payments"), {methods}); say("تم الحفظ");
+  });
+  if (q("#tkSend")) return run(async () => {
+    const subject = $("tkSubject").value.trim(), message = $("tkMsg").value.trim();
+    if (!subject || !message) return say("اكتب العنوان والتفاصيل");
+    await addDoc(collection(db,"tickets"), {uid:user.uid, email:user.email, name:user.displayName||"", type:$("tkType").value, subject, message, status:"open", replies:[], createdAt:serverTimestamp()});
+    $("tkSubject").value = ""; $("tkMsg").value = ""; say("تم الإرسال");
+  });
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.order) run(() => updateDoc(doc(db,"orders",t.dataset.order), {status:t.value}));
+  if (t.dataset.role) run(() => updateDoc(doc(db,"users",t.dataset.role), {role:t.value}).then(()=>say("تم تغيير الرتبة")));
+});
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.pi !== undefined) payEdit[+t.dataset.pi][t.dataset.f] = t.value;
+});
+
+/* ---------- الاتصال بقاعدة البيانات ---------- */
+renderAll();
+if (ok) {
+  const sub = (ref, fn) => unsubs.push(onSnapshot(ref, fn, e => console.warn(e.code)));
+  const list = s => s.docs.map(d => ({id:d.id, ...d.data()}));
+
+  onSnapshot(collection(db,"products"), s => { products = list(s); renderProducts(); if (curTab==="products") renderTab(); }, e => console.warn(e.code));
+  onSnapshot(doc(db,"settings","payments"), s => { pay = (s.exists() && s.data().methods?.length) ? s.data().methods : DEF_PAY; renderPayments(); }, e => console.warn(e.code));
+
+  /* عدّاد الزيارات: مرة لكل متصفح */
+  try { if (localStorage.getItem("ba_seen") !== "1")
+    setDoc(doc(db,"stats","visits"), {count:increment(1)}, {merge:true}).then(()=>localStorage.setItem("ba_seen","1")).catch(()=>{});
+  } catch(_) {}
+
+  onAuthStateChanged(auth, async u => {
+    unsubs.forEach(f => f()); unsubs = [];
+    user = u; role = "buyer"; myTickets = []; myOrders = []; staffTickets = []; orders = []; usersList = [];
+    if (u) {
+      try {
+        const isOwner = u.email === OWNER_EMAIL, ref = doc(db,"users",u.uid), snap = await getDoc(ref);
+        if (!snap.exists()) {
+          role = isOwner ? "owner" : "buyer";
+          await setDoc(ref, {email:u.email, name:u.displayName||"", photo:u.photoURL||"", role, createdAt:serverTimestamp()});
+        } else {
+          role = snap.data().role || "buyer";
+          if (isOwner && role !== "owner") { await updateDoc(ref, {role:"owner"}); role = "owner"; }
+        }
+      } catch (e) { say("تأكد إنك نشرت قواعد Firestore (Rules): " + e.code); }
+      const r = RANK[role];
+      sub(query(collection(db,"tickets"), where("uid","==",u.uid)), s => { myTickets = list(s); renderSupport(); });
+      sub(query(collection(db,"orders"), where("uid","==",u.uid)), s => { myOrders = list(s); renderSupport(); });
+      if (r >= 1) sub(collection(db,"tickets"), s => { staffTickets = list(s); renderPanel(); });
+      if (r >= 2) {
+        sub(collection(db,"orders"), s => { orders = list(s); if (curTab==="orders") renderTab(); });
+        sub(collection(db,"users"), s => { usersList = list(s); if (curTab==="users") renderTab(); });
+        sub(doc(db,"stats","visits"), s => { $("visits").textContent = num(s.exists() ? s.data().count : 0); });
+      }
+    }
+    renderAll();
+  });
+}
 </script>
 </body>
 </html>
