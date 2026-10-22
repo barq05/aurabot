@@ -1,18 +1,315 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>موقعي</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 60px; background: #f5f7fa; }
-    h1 { color: #2b6cb0; }
-    button { padding: 10px 24px; font-size: 16px; cursor: pointer; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOTAURA | بوتات ديسكورد ودعم فني</title>
+<meta name="description" content="نصمم ونبيع بوتات ديسكورد جاهزة ومخصصة، ونوفر دعماً فنياً لسيرفرك.">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#150538; --bg2:#200a5c; --card:#2a1170; --line:#4c2fb0;
+  --violet:#7c3aed; --lav:#a78bfa; --pink:#e879f9; --text:#f3eeff; --mute:#b9a9ee;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:'Readex Pro',Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(60vw 60vw at 85% -10%,#4a1fb8 0%,transparent 60%),radial-gradient(50vw 50vw at 0% 40%,#6b1b8f55 0%,transparent 60%)}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:auto;padding:0 20px}
+:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:#150538d9;backdrop-filter:blur(12px);border-bottom:1px solid #4c2fb055}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.14em}
+.brand img{width:36px;height:36px;border-radius:10px}
+.links{display:flex;gap:26px;color:var(--mute);font-size:.95rem}
+.links a:hover{color:var(--pink)}
+.btn{display:inline-block;padding:11px 24px;border-radius:12px;font-weight:600;border:0;cursor:pointer;font:inherit;font-weight:600;transition:transform .2s,box-shadow .2s}
+.btn.main{background:linear-gradient(135deg,var(--violet),var(--pink));color:#fff;box-shadow:0 8px 28px #7c3aed66}
+.btn.main:hover{transform:translateY(-2px);box-shadow:0 12px 36px #e879f966}
+.btn.ghost{border:1px solid var(--line);color:var(--lav);background:transparent}
+.btn.ghost:hover{border-color:var(--pink);color:var(--pink)}
+@media(max-width:760px){.links{display:none}}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center;padding:70px 0 50px}
+.hero h1{font-size:clamp(2.2rem,5vw,3.8rem);line-height:1.25;font-weight:700}
+.hero h1 span{background:linear-gradient(90deg,var(--lav),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mute);font-size:1.1rem;max-width:520px;margin:18px 0 30px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.orbit{position:relative;width:min(420px,86vw);aspect-ratio:1;margin:auto}
+.orbit svg{width:100%;height:100%;overflow:visible}
+.ring-a{transform-origin:200px 200px;animation:spin 40s linear infinite}
+.ring-b{transform-origin:200px 200px;animation:spin 26s linear infinite reverse}
+.bob{animation:bob 4s ease-in-out infinite}
+.blink{transform-origin:center;animation:blink 5s infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-8px)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+@media(max-width:860px){.hero{grid-template-columns:1fr;text-align:center}.hero p{margin-inline:auto}.cta{justify-content:center}}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat{background:#2a117099;border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center}
+.stat b{display:block;font-size:2rem;color:var(--pink);font-weight:700;line-height:1.3}
+.stat small{color:var(--mute)}
+.stat.live b::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#4ade80;margin-inline-start:8px;box-shadow:0 0 10px #4ade80;vertical-align:middle}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+section{padding:64px 0}
+h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px}
+.sub{color:var(--mute);margin-bottom:34px;max-width:560px}
+
+/* services */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:linear-gradient(160deg,#2a1170,#1d0a52);border:1px solid var(--line);border-radius:18px;padding:26px;transition:border-color .25s,transform .25s}
+.card:hover{border-color:var(--pink);transform:translateY(-4px)}
+.card .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.4rem;background:linear-gradient(135deg,var(--violet),var(--pink));margin-bottom:14px}
+.card h3{font-size:1.15rem;margin-bottom:6px}
+.card p{color:var(--mute);font-size:.95rem}
+
+/* pricing */
+.price{position:relative;display:flex;flex-direction:column}
+.price .amt{font-size:2.2rem;font-weight:700;margin:6px 0}
+.price .amt small{font-size:.9rem;color:var(--mute);font-weight:300}
+.price ul{list-style:none;padding:0;margin:12px 0 22px;color:var(--mute);font-size:.95rem;flex:1}
+.price li{padding:5px 0;border-bottom:1px dashed #4c2fb066}
+.price li::before{content:"✓";color:var(--pink);margin-inline-end:8px}
+.price.hot{border-color:var(--pink);box-shadow:0 0 40px #e879f933}
+.tag{position:absolute;top:-13px;inset-inline-start:22px;background:var(--pink);color:#2a0a55;font-size:.8rem;font-weight:700;padding:2px 14px;border-radius:99px}
+
+/* permissions */
+.perm{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
+.panel{background:#1d0a52;border:1px solid var(--line);border-radius:20px;padding:24px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{padding:7px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--lav);font:inherit;font-size:.9rem;cursor:pointer;transition:.2s}
+.chip:hover,.chip.on{background:var(--violet);color:#fff;border-color:var(--violet)}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.plist label{display:flex;gap:8px;align-items:center;padding:9px 12px;border-radius:12px;background:#2a117088;cursor:pointer;font-size:.92rem;border:1px solid transparent;transition:.2s}
+.plist label:hover{border-color:var(--line)}
+.plist input{accent-color:var(--pink);width:16px;height:16px}
+.plist label.danger span{color:#fda4af}
+.out label{display:block;font-size:.88rem;color:var(--mute);margin:12px 0 6px}
+.out input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;direction:ltr;text-align:left}
+.num{font-size:2rem;font-weight:700;color:var(--pink);direction:ltr;text-align:left;word-break:break-all}
+.note{font-size:.85rem;color:var(--mute);margin-top:12px}
+@media(max-width:860px){.perm{grid-template-columns:1fr}}
+
+/* faq + footer */
+details{background:#2a117088;border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--mute);margin-top:8px}
+footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-align:center;font-size:.9rem}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,90px);background:var(--pink);color:#2a0a55;padding:10px 22px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:50}
+.toast.show{transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto}}
+</style>
 </head>
 <body>
-  <h1>أهلاً بك في موقعي</h1>
-  <p>هذا موقع مجاني بالكامل.</p>
-  <button onclick="alert('مرحباً!')">اضغط هنا</button>
+
+<nav><div class="wrap">
+  <a href="#top" class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'">BOTAURA</a>
+  <div class="links"><a href="#services">الخدمات</a><a href="#pricing">الأسعار</a><a href="#permissions">الصلاحيات</a><a href="#faq">الأسئلة</a></div>
+  <a class="btn main" data-discord href="#contact">تواصل معنا</a>
+</div></nav>
+
+<main id="top" class="wrap">
+  <div class="hero">
+    <div>
+      <h1>بوتات ديسكورد تخلّي <span>سيرفرك</span> يشتغل لوحده</h1>
+      <p>بنصمم ونبيع بوتات جاهزة ومخصصة، ونتابع سيرفرك بدعم فني سريع. تختار الباقة، ونسلّمك البوت شغّال.</p>
+      <div class="cta">
+        <a class="btn main" href="#pricing">شوف الباقات</a>
+        <a class="btn ghost" href="#permissions">احسب صلاحيات البوت</a>
+      </div>
+    </div>
+    <div class="orbit" aria-hidden="true">
+      <svg viewBox="0 0 400 400">
+        <defs>
+          <linearGradient id="hd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>
+          <radialGradient id="gl"><stop offset="0" stop-color="#e879f9" stop-opacity=".35"/><stop offset="1" stop-color="#e879f9" stop-opacity="0"/></radialGradient>
+        </defs>
+        <circle cx="200" cy="200" r="195" fill="url(#gl)"/>
+        <circle cx="200" cy="200" r="185" fill="none" stroke="#a78bfa" stroke-width="3"/>
+        <g class="ring-a"><circle cx="200" cy="200" r="168" fill="none" stroke="#c4b5fd" stroke-width="10" stroke-dasharray="2 9"/></g>
+        <g class="ring-b"><circle cx="200" cy="200" r="145" fill="none" stroke="#e879f9" stroke-width="5" stroke-dasharray="60 22 14 22"/></g>
+        <circle cx="200" cy="200" r="122" fill="#1a0746" stroke="#a78bfa" stroke-width="2.5"/>
+        <g class="bob">
+          <line x1="200" y1="118" x2="200" y2="140" stroke="#c4b5fd" stroke-width="6"/>
+          <circle cx="200" cy="112" r="10" fill="#e879f9"/>
+          <rect x="140" y="140" width="120" height="96" rx="34" fill="url(#hd)"/>
+          <rect x="128" y="168" width="14" height="38" rx="6" fill="#7c3aed"/><rect x="258" y="168" width="14" height="38" rx="6" fill="#7c3aed"/>
+          <rect x="155" y="158" width="90" height="52" rx="24" fill="#1a0746" stroke="#c4b5fd" stroke-width="3"/>
+          <g class="blink"><ellipse cx="180" cy="184" rx="12" ry="14" fill="#e879f9"/><ellipse cx="220" cy="184" rx="12" ry="14" fill="#e879f9"/>
+          <circle cx="177" cy="180" r="4" fill="#fff"/><circle cx="217" cy="180" r="4" fill="#fff"/></g>
+          <path d="M184 222q16 10 32 0" fill="none" stroke="#f3eeff" stroke-width="4" stroke-linecap="round"/>
+          <rect x="182" y="236" width="36" height="14" rx="4" fill="#5b21b6"/>
+          <path d="M120 290q80-60 160 0v10H120z" fill="#6d3df0" opacity=".9"/>
+          <circle cx="200" cy="282" r="8" fill="#e879f9"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat live"><b id="visits">...</b><small>زيارة للموقع</small></div>
+    <div class="stat"><b data-count="120">0</b><small>بوت تم تسليمه</small></div>
+    <div class="stat"><b data-count="85">0</b><small>سيرفر بنتابعه</small></div>
+    <div class="stat"><b>24/7</b><small>دعم فني</small></div>
+  </div>
+  <p class="note" style="margin-bottom:0">الأرقام التجريبية (بوت / سيرفر) غيّرها من الكود بأرقامك الحقيقية.</p>
+
+  <section id="services">
+    <h2>إيه اللي بنقدمه؟</h2>
+    <p class="sub">كل خدمة بتغطي جزء من شغل السيرفر، وتقدر تجمع أكتر من واحدة.</p>
+    <div class="grid">
+      <div class="card"><div class="ic">🛡️</div><h3>بوتات حماية وإدارة</h3><p>حظر تلقائي للسبام والروابط، سجل أحداث، ورتب تلقائية للأعضاء الجدد.</p></div>
+      <div class="card"><div class="ic">🎫</div><h3>نظام تذاكر</h3><p>أعضاؤك يفتحوا تذكرة دعم بضغطة زر، والفريق يستلمها ويقفلها وتتحفظ نسخة منها.</p></div>
+      <div class="card"><div class="ic">🎵</div><h3>بوتات موسيقى</h3><p>تشغيل من يوتيوب وسبوتيفاي، قائمة انتظار، وتحكم كامل بالأوامر أو الأزرار.</p></div>
+      <div class="card"><div class="ic">⚙️</div><h3>بوت مخصص</h3><p>عندك فكرة؟ نبرمج بوت بمزايا خاصة بسيرفرك، اقتصاد، مستويات، ألعاب وغيره.</p></div>
+      <div class="card"><div class="ic">🧰</div><h3>ضبط السيرفر</h3><p>تنظيم القنوات والرتب والصلاحيات وتصميم شكل السيرفر من الصفر.</p></div>
+      <div class="card"><div class="ic">💬</div><h3>دعم فني مستمر</h3><p>صيانة وتحديثات وإصلاح أعطال البوت، وحد يرد عليك بسرعة.</p></div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2>الباقات</h2>
+    <p class="sub">الأسعار المكتوبة تجريبية، عدّلها من الكود بأسعارك.</p>
+    <div class="grid">
+      <div class="card price"><h3>بوت جاهز</h3><div class="amt">150 <small>ج.م / مرة واحدة</small></div>
+        <ul><li>اختيار بوت من القوالب</li><li>إضافته لسيرفرك</li><li>شرح استخدام</li></ul>
+        <a class="btn ghost" data-discord href="#contact">اطلب الآن</a></div>
+      <div class="card price hot"><span class="tag">الأكثر طلباً</span><h3>بوت مخصص</h3><div class="amt">500 <small>ج.م ويزيد حسب الطلب</small></div>
+        <ul><li>مزايا حسب طلبك</li><li>اسم وصورة خاصة بالبوت</li><li>استضافة شهر مجاناً</li><li>تعديلات بعد التسليم</li></ul>
+        <a class="btn main" data-discord href="#contact">اطلب الآن</a></div>
+      <div class="card price"><h3>دعم فني</h3><div class="amt">100 <small>ج.م / شهرياً</small></div>
+        <ul><li>صيانة وتحديث البوت</li><li>رد خلال ساعات</li><li>مساعدة في ضبط السيرفر</li></ul>
+        <a class="btn ghost" data-discord href="#contact">اشترك</a></div>
+    </div>
+  </section>
+
+  <section id="permissions">
+    <h2>صلاحيات البوت</h2>
+    <p class="sub">اختار الصلاحيات اللي البوت محتاجها، وهنطلعلك رابط الدعوة جاهز. اعطي البوت اللي يحتاجه بس، ده أأمن لسيرفرك.</p>
+    <div class="perm">
+      <div class="panel">
+        <div class="presets" id="presets"></div>
+        <div class="plist" id="plist"></div>
+      </div>
+      <div class="panel out">
+        <small style="color:var(--mute)">رقم الصلاحيات</small>
+        <div class="num" id="pnum">0</div>
+        <label for="cid">Client ID بتاع البوت</label>
+        <input id="cid" inputmode="numeric" placeholder="123456789012345678">
+        <label for="plink">رابط الدعوة</label>
+        <input id="plink" readonly>
+        <button class="btn main" style="width:100%;margin-top:14px" id="copy">نسخ الرابط</button>
+        <p class="note">الـ Client ID تلاقيه في Discord Developer Portal تحت اسم تطبيقك، في صفحة General Information.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>أسئلة شائعة</h2><div style="height:18px"></div>
+    <details><summary>أستلم البوت إزاي؟</summary><p>بنضيفه لسيرفرك بنفسنا، أو نسلمك التوكن والملفات لو الاستضافة عندك.</p></details>
+    <details><summary>مدة التسليم قد إيه؟</summary><p>البوتات الجاهزة في نفس اليوم، والمخصصة من يومين لأسبوع حسب التعقيد.</p></details>
+    <details><summary>لو البوت وقف أو فيه مشكلة؟</summary><p>باقة الدعم الفني بتغطي الإصلاح والتحديث، وبنرد عليك في أسرع وقت.</p></details>
+  </section>
+
+  <section id="contact" style="text-align:center">
+    <h2>جاهز نبدأ؟</h2>
+    <p class="sub" style="margin:0 auto 24px">ادخل سيرفر الدعم وقولنا إنت محتاج إيه.</p>
+    <a class="btn main" data-discord target="_blank" rel="noopener" href="#">ادخل سيرفر ديسكورد</a>
+  </section>
+</main>
+
+<footer>© <span id="yr"></span> BOTAURA، بوتات ديسكورد</footer>
+<div class="toast" id="toast">تم النسخ</div>
+
+<script>
+/* ===== الإعدادات: عدّل هنا ===== */
+const DISCORD_INVITE = "https://discord.gg/PUT_YOUR_INVITE";   // حط رابط سيرفرك
+const COUNTER_NS = "botaura-barq05";                            // اسم العداد (غيّره لو حبيت)
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+document.querySelectorAll('[data-discord]').forEach(a => { a.href = DISCORD_INVITE; a.target = '_blank'; a.rel = 'noopener'; });
+
+/* عداد الزيارات: زيادة مرة لكل متصفح، وبديل محلي لو الخدمة وقعت */
+const ar = n => Number(n).toLocaleString('ar-EG');
+async function visits(){
+  const el = document.getElementById('visits');
+  let seen = false; try { seen = localStorage.getItem('ba_seen') === '1'; } catch(e){}
+  const base = `https://api.counterapi.dev/v1/${COUNTER_NS}/visits/`;
+  try{
+    const r = await fetch(base + (seen ? '' : 'up'));
+    const d = await r.json();
+    if (typeof d.count !== 'number') throw 0;
+    try { localStorage.setItem('ba_seen','1'); } catch(e){}
+    el.textContent = ar(d.count);
+  }catch(e){
+    let n = 1; try { n = (+localStorage.getItem('ba_local')||0) + (seen?0:1); localStorage.setItem('ba_local', n); localStorage.setItem('ba_seen','1'); } catch(_){}
+    el.textContent = ar(n);
+  }
+}
+visits();
+
+/* عدّاد أرقام متحرك */
+document.querySelectorAll('[data-count]').forEach(el=>{
+  const to = +el.dataset.count; let n = 0;
+  const io = new IntersectionObserver(([e])=>{ if(!e.isIntersecting) return; io.disconnect();
+    const t = setInterval(()=>{ n += Math.ceil(to/40); if(n>=to){n=to;clearInterval(t)} el.textContent = ar(n)+'+'; },30);
+  }); io.observe(el);
+});
+
+/* حاسبة الصلاحيات (BigInt لأن بعض القيم أكبر من 32 bit) */
+const P = [
+ ['View Channel',10,'رؤية القنوات'],['Send Messages',11,'إرسال رسائل'],['Embed Links',14,'تضمين روابط'],
+ ['Attach Files',15,'إرفاق ملفات'],['Add Reactions',6,'إضافة تفاعلات'],['Read Message History',16,'قراءة سجل الرسائل'],
+ ['Use External Emojis',18,'إيموجي خارجي'],['Connect',20,'دخول القنوات الصوتية'],['Speak',21,'التحدث في الصوت'],
+ ['Manage Messages',13,'إدارة الرسائل'],['Kick Members',1,'طرد الأعضاء'],['Ban Members',2,'حظر الأعضاء'],
+ ['Moderate Members',40,'كتم مؤقت (Timeout)'],['Manage Roles',28,'إدارة الرتب'],['Manage Channels',4,'إدارة القنوات'],
+ ['View Audit Log',7,'سجل التدقيق'],['Mention Everyone',17,'منشن للجميع'],['Administrator',3,'مشرف كامل (خطر)']
+];
+const PRE = {
+ 'أساسي':['View Channel','Send Messages','Embed Links','Read Message History','Add Reactions'],
+ 'موسيقى':['View Channel','Send Messages','Embed Links','Connect','Speak','Add Reactions'],
+ 'حماية':['View Channel','Send Messages','Embed Links','Read Message History','Manage Messages','Kick Members','Ban Members','Moderate Members','Manage Roles','View Audit Log'],
+ 'مشرف كامل':['Administrator']
+};
+const plist = document.getElementById('plist'), presets = document.getElementById('presets');
+P.forEach(([k,b,l])=>{
+  const lb = document.createElement('label'); if(k==='Administrator') lb.className='danger';
+  lb.innerHTML = `<input type="checkbox" value="${k}" data-b="${b}"><span>${l}</span>`;
+  plist.appendChild(lb);
+});
+const boxes = [...plist.querySelectorAll('input')];
+function calc(){
+  let n = 0n; boxes.forEach(c=>{ if(c.checked) n |= 1n << BigInt(c.dataset.b); });
+  document.getElementById('pnum').textContent = n.toString();
+  const id = document.getElementById('cid').value.replace(/\D/g,'');
+  document.getElementById('plink').value = id
+    ? `https://discord.com/oauth2/authorize?client_id=${id}&permissions=${n}&scope=bot%20applications.commands`
+    : 'اكتب الـ Client ID أولاً';
+}
+Object.entries(PRE).forEach(([name,list])=>{
+  const b = document.createElement('button'); b.className='chip'; b.textContent=name;
+  b.onclick = ()=>{ boxes.forEach(c=>c.checked = list.includes(c.value));
+    presets.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b)); calc(); };
+  presets.appendChild(b);
+});
+boxes.forEach(c=>c.addEventListener('change',()=>{ presets.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); calc(); }));
+document.getElementById('cid').addEventListener('input',calc);
+presets.firstChild.click();
+document.getElementById('copy').onclick = async ()=>{
+  const v = document.getElementById('plink').value; if(!/^https/.test(v)) return;
+  try{ await navigator.clipboard.writeText(v); }catch(e){ document.getElementById('plink').select(); document.execCommand('copy'); }
+  const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
+};
+</script>
 </body>
 </html>
