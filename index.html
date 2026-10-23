@@ -54,11 +54,12 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:6
 @media(max-width:860px){.hero{grid-template-columns:1fr;text-align:center}.hero p{margin-inline:auto}.cta{justify-content:center}}
 
 /* stats */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 .stat{background:#2a117099;border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center}
 .stat b{display:block;font-size:2rem;color:var(--pink);font-weight:700;line-height:1.3}
 .stat small{color:var(--mute)}
 .stat.live b::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#4ade80;margin-inline-start:8px;box-shadow:0 0 10px #4ade80;vertical-align:middle}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
 
 section{padding:64px 0}
 h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px}
@@ -76,11 +77,13 @@ h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px}
 .price{position:relative;display:flex;flex-direction:column}
 .price .amt{font-size:2.2rem;font-weight:700;margin:6px 0}
 .price .amt small{font-size:.9rem;color:var(--mute);font-weight:300}
-.price p.d{flex:1;color:var(--mute);font-size:.95rem;margin:6px 0 18px}
+.price ul{list-style:none;padding:0;margin:12px 0 22px;color:var(--mute);font-size:.95rem;flex:1}
+.price li{padding:5px 0;border-bottom:1px dashed #4c2fb066}
+.price li::before{content:"✓";color:var(--pink);margin-inline-end:8px}
 .price.hot{border-color:var(--pink);box-shadow:0 0 40px #e879f933}
 .tag{position:absolute;top:-13px;inset-inline-start:22px;background:var(--pink);color:#2a0a55;font-size:.8rem;font-weight:700;padding:2px 14px;border-radius:99px}
 
-/* permissions calculator */
+/* permissions */
 .perm{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
 .panel{background:#1d0a52;border:1px solid var(--line);border-radius:20px;padding:24px}
 .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
@@ -102,12 +105,12 @@ details{background:#2a117088;border:1px solid var(--line);border-radius:14px;pad
 summary{cursor:pointer;font-weight:600}
 details p{color:var(--mute);margin-top:8px}
 footer{border-top:1px solid #4c2fb055;padding:34px 0;color:var(--mute);text-align:center;font-size:.9rem}
-.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,90px);background:var(--pink);color:#2a0a55;padding:10px 22px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:50;max-width:92vw;text-align:center}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,90px);background:var(--pink);color:#2a0a55;padding:10px 22px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:50}
 .toast.show{transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto}}
 
-/* auth / dashboard / tickets */
 [hidden]{display:none!important}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
 .user{display:flex;align-items:center;gap:10px}
 .user img{width:34px;height:34px;border-radius:50%;border:2px solid var(--pink)}
 .badge{font-size:.75rem;padding:2px 12px;border-radius:99px;background:var(--violet);color:#fff;white-space:nowrap}
@@ -128,12 +131,10 @@ textarea.field{min-height:100px;resize:vertical}
 .pm{display:block;padding:12px 14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;cursor:pointer}
 .pm small{display:block;color:var(--mute);margin-inline-start:26px}
 .pm input{accent-color:var(--pink);margin-inline-end:8px}
-.warn{background:#7c2d12;color:#ffedd5;padding:12px 20px;text-align:center;font-size:.92rem}
+.price p.d{flex:1;color:var(--mute);font-size:.95rem;margin:6px 0 18px}
 </style>
 </head>
 <body>
-
-<div class="warn" id="setupWarn" hidden>الموقع لسه مش متربط بـ Firebase. حط إعدادات المشروع في الكود (firebaseConfig) عشان تسجيل الدخول والمنتجات والدعم يشتغلوا.</div>
 
 <nav><div class="wrap">
   <a href="#top" class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'">BOTAURA</a>
@@ -185,6 +186,7 @@ textarea.field{min-height:100px;resize:vertical}
     <div class="stat"><b data-count="85">0</b><small>سيرفر بنتابعه</small></div>
     <div class="stat"><b>24/7</b><small>دعم فني</small></div>
   </div>
+  <p class="note" style="margin-bottom:0">الأرقام التجريبية (بوت / سيرفر) غيّرها من الكود بأرقامك الحقيقية.</p>
 
   <section id="services">
     <h2>إيه اللي بنقدمه؟</h2>
@@ -277,13 +279,14 @@ textarea.field{min-height:100px;resize:vertical}
 <script>
 /* ===== الإعدادات: عدّل هنا ===== */
 const DISCORD_INVITE = "https://discord.gg/PUT_YOUR_INVITE";   // حط رابط سيرفرك
+const COUNTER_NS = "botaura-barq05";                            // اسم العداد (غيّره لو حبيت)
 
 document.getElementById('yr').textContent = new Date().getFullYear();
-document.querySelectorAll('[data-discord]').forEach(a => { a.href = DISCORD_INVITE; });
+document.querySelectorAll('[data-discord]').forEach(a => { a.href = DISCORD_INVITE; a.target = '_blank'; a.rel = 'noopener'; });
 
 const ar = n => Number(n).toLocaleString('ar-EG');
 
-/* عدّاد أرقام متحرك (غيّر data-count بأرقامك الحقيقية) */
+/* عدّاد أرقام متحرك */
 document.querySelectorAll('[data-count]').forEach(el=>{
   const to = +el.dataset.count; let n = 0;
   const io = new IntersectionObserver(([e])=>{ if(!e.isIntersecting) return; io.disconnect();
@@ -333,7 +336,7 @@ presets.firstChild.click();
 document.getElementById('copy').onclick = async ()=>{
   const v = document.getElementById('plink').value; if(!/^https/.test(v)) return;
   try{ await navigator.clipboard.writeText(v); }catch(e){ document.getElementById('plink').select(); document.execCommand('copy'); }
-  const t = document.getElementById('toast'); t.textContent='تم النسخ'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
+  const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
 };
 </script>
 
@@ -344,12 +347,12 @@ import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onS
 
 /* ===== الصق إعدادات Firebase هنا ===== */
 const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT.firebaseapp.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT.appspot.com",
-  messagingSenderId: "PASTE",
-  appId: "PASTE"
+  apiKey: "AIzaSyAZTIyC_c3HS3aEbNMd3puGR6noNcTXkAw",
+  authDomain: "aurabots-d7cbf.firebaseapp.com",
+  projectId: "aurabots-d7cbf",
+  storageBucket: "aurabots-d7cbf.firebasestorage.app",
+  messagingSenderId: "776275159117",
+  appId: "1:776275159117:web:8d1691ff05918661b01404"
 };
 const OWNER_EMAIL = "barqelhadidy@gmail.com";
 /* ================================== */
@@ -381,17 +384,15 @@ let products = [], pay = DEF_PAY, payEdit = [];
 let myTickets = [], myOrders = [], staffTickets = [], orders = [], usersList = [], curTab = "tickets";
 
 if (ok) { const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }
-else $("setupWarn").hidden = false;
 
 /* ---------- تسجيل الدخول ---------- */
 async function login() {
-  if (!ok) return say("لازم تربط Firebase الأول");
+  if (!ok) return say("لازم تربط Firebase الأول (شوف التعليمات)");
   const p = new GoogleAuthProvider(); p.setCustomParameters({prompt:"select_account"});
   try { await signInWithPopup(auth, p); }
   catch (e) {
     if (e.code === "auth/popup-blocked") signInWithRedirect(auth, p);
-    else if (e.code === "auth/unauthorized-domain") say("الدومين مش مضاف في Firebase ← Authorized domains");
-    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") say("فشل تسجيل الدخول: " + e.code);
+    else if (e.code !== "auth/popup-closed-by-user") say("فشل تسجيل الدخول: " + e.code);
   }
 }
 
@@ -475,7 +476,7 @@ function openBuy(p) {
 document.addEventListener("click", e => {
   const t = e.target, q = s => t.closest(s);
   if (q("[data-login]")) return login();
-  if (q("#logout")) return run(() => signOut(auth));
+  if (q("#logout")) return signOut(auth);
   if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
   let b;
   if ((b = q("[data-buy]"))) { const p = curProducts().find(x => String(x.id) === b.dataset.buy); return p && openBuy(p); }
@@ -492,7 +493,7 @@ document.addEventListener("click", e => {
   });
   if (q("#addProduct")) return run(async () => {
     const name = $("pName").value.trim(), price = Number($("pPrice").value);
-    if (!name || $("pPrice").value === "" || !(price >= 0)) return say("اكتب الاسم والسعر");
+    if (!name || !(price >= 0) || $("pPrice").value === "") return say("اكتب الاسم والسعر");
     await addDoc(collection(db,"products"), {name, desc:$("pDesc").value.trim(), price, hot:$("pHot").checked, createdAt:serverTimestamp()});
     say("تمت إضافة المنتج"); renderTab(true);
   });
@@ -526,17 +527,16 @@ if (ok) {
   const sub = (ref, fn) => unsubs.push(onSnapshot(ref, fn, e => console.warn(e.code)));
   const list = s => s.docs.map(d => ({id:d.id, ...d.data()}));
 
-  onSnapshot(collection(db,"products"), s => { products = list(s); renderProducts(); if (curTab==="products") renderTab(); }, e => console.warn(e.code));
-  onSnapshot(doc(db,"settings","payments"), s => { pay = (s.exists() && s.data().methods?.length) ? s.data().methods : DEF_PAY; renderPayments(); }, e => console.warn(e.code));
+  onSnapshot(collection(db,"products"), s => { products = list(s); renderProducts(); if (curTab==="products") renderTab(); });
+  onSnapshot(doc(db,"settings","payments"), s => { pay = (s.exists() && s.data().methods?.length) ? s.data().methods : DEF_PAY; renderPayments(); });
 
-  /* عدّاد الزيارات: مرة لكل متصفح */
   try { if (localStorage.getItem("ba_seen") !== "1")
     setDoc(doc(db,"stats","visits"), {count:increment(1)}, {merge:true}).then(()=>localStorage.setItem("ba_seen","1")).catch(()=>{});
   } catch(_) {}
 
   onAuthStateChanged(auth, async u => {
     unsubs.forEach(f => f()); unsubs = [];
-    user = u; role = "buyer"; myTickets = []; myOrders = []; staffTickets = []; orders = []; usersList = [];
+    user = u; role = "buyer"; myTickets = myOrders = staffTickets = orders = usersList = [];
     if (u) {
       try {
         const isOwner = u.email === OWNER_EMAIL, ref = doc(db,"users",u.uid), snap = await getDoc(ref);
