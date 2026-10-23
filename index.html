@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BOTAURA | بوتات ديسكورد </title>
+<title>BOTAURA | بوتات ديسكورد ودعم فني</title>
 <meta name="description" content="نصمم ونبيع بوتات ديسكورد جاهزة ومخصصة، ونوفر دعماً فنياً لسيرفرك.">
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -310,7 +310,7 @@ textarea.field{min-height:100px;resize:vertical}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy,getDocs,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy,getDocs,limit,runTransaction,deleteField} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ===== الصق إعدادات Firebase هنا ===== */
 const firebaseConfig = {
@@ -331,7 +331,7 @@ const num = n => Number(n).toLocaleString("ar-EG");
 const RANK = {banned:-1, buyer:0, support:1, admin:2, owner:3, founder:4};
 const assignable = () => role === "founder" ? ["buyer","support","admin","owner","banned"] : role === "owner" ? ["buyer","support","admin","banned"] : ["buyer","support","banned"];
 const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر", founder:"👑 المالك", banned:"🚫 محظور"};
-const ORDER_AR = {pending:"قيد المراجعة", paid:"تم الدفع", done:"تم التسليم", cancelled:"ملغي"};
+const ORDER_AR = {pending:"في انتظار الاستلام", processing:"تم الاستلام · جاري التنفيذ", paid:"تم الدفع", done:"تم التسليم", cancelled:"ملغي"};
 const listE = s => s.docs.map(d => ({id:d.id, ...d.data({serverTimestamps:"estimate"})}));
 const hm = t => { const v = t?.toMillis?.() ?? t ?? 0; return v ? new Date(v).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}) : ""; };
 const ms = t => t?.toMillis?.() ?? t ?? 0;
@@ -411,14 +411,16 @@ const byNew = (a, b) => ms(b.createdAt) - ms(a.createdAt);
 function renderSupport() {
   $("tkLogin").hidden = !!user; $("tkForm").hidden = !user;
   safeSet($("myTickets"), !user ? '<p class="note">سجّل دخول لعرض تذاكرك.</p>' : ([...myTickets].sort(byNew).map(t=>ticketHTML(t,false)).join("") || '<p class="note">مفيش تذاكر لسه.</p>'));
-  $("myOrders").innerHTML = user && myOrders.length ? `<h3 style="margin-bottom:10px">طلباتي</h3>` + [...myOrders].sort(byNew).map(o=>`<div class="item"><b>${esc(o.productName)}</b> · ${num(o.price)} ج.م<br><small class="note">${esc(o.method)} · ${ORDER_AR[o.status]||o.status}</small></div>`).join("") : "";
+  $("myOrders").innerHTML = user && myOrders.length ? `<h3 style="margin-bottom:10px">طلباتي</h3>` + [...myOrders].sort(byNew).map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><span class="badge ${o.status==="cancelled"?"closed":""}">${ORDER_AR[o.status]||o.status}</span></div><small class="note">${sid(o.id)} · ${esc(o.method)}${o.claimedByName?" · ✅ استلمه: "+esc(o.claimedByName):" · في انتظار استلام فريقنا"}</small><div class="row" style="margin-top:8px"><button class="btn main sm" data-oc="${o.id}">💬 تواصل بخصوص الطلب${attn(o)?'<i class="dot"></i>':""}</button></div></div>`).join("") : "";
+  const nAttn = user ? myOrders.filter(attn).length : 0, sl = document.querySelector('.links a[href="#support"]');
+  if (sl) sl.textContent = "الدعم" + (nAttn ? ` (${num(nAttn)})` : "");
 }
 
 /* ---------- لوحة التحكم ---------- */
 const TABS = [["tickets","استقبال التذاكر",1],["orders","استقبال الطلبات",2],["room","تواصل الإدارة",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["perms","الصلاحيات",2],["site","إعدادات الموقع",4]];
 const counts = () => ({
   tickets: staffTickets.filter(x => x.status === "open").length,
-  orders: orders.filter(x => x.status === "pending").length,
+  orders: orders.filter(x => x.status === "pending" || x.lastFrom === "user").length,
   room: roomUnread()
 });
 function renderPanel(force) {
@@ -443,11 +445,21 @@ const empty = '<p class="note">مفيش حاجة لسه.</p>';
 function tabTickets() {
   return [...staffTickets].sort((a,b)=>(a.status===b.status?0:a.status==="open"?-1:1)||byNew(a,b)).map(t=>ticketHTML(t,true)).join("") || empty;
 }
+const sid = id => "#" + String(id).slice(0, 6).toUpperCase();
+const seenOC = id => { try { return +localStorage.getItem("ba_oc_" + user.uid + "_" + id) || 0; } catch (_) { return 0; } };
+const attn = o => !!user && ((o.lastFrom === "staff" && ms(o.lastMsgAt) > seenOC(o.id)) || (!!o.claimedAt && ms(o.claimedAt) > seenOC(o.id)));
 function tabOrders() {
+  const keys = ["all", ...Object.keys(ORDER_AR)];
   const cnt = s => s === "all" ? orders.length : orders.filter(o => o.status === s).length;
-  const chips = ["all","pending","paid","done","cancelled"].map(s => `<button class="chip ${orderFilter===s?"on":""}" data-of="${s}">${s==="all"?"الكل":ORDER_AR[s]} (${num(cnt(s))})</button>`).join("");
+  const chips = keys.map(s => `<button class="chip ${orderFilter===s?"on":""}" data-of="${s}">${s==="all"?"الكل":ORDER_AR[s]} (${num(cnt(s))})</button>`).join("");
   const list = orders.filter(o => orderFilter === "all" || o.status === orderFilter).sort(byNew);
-  return `<div class="tabs">${chips}</div>` + (list.map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small></div>`).join("") || empty);
+  return `<div class="tabs">${chips}</div>` + (list.map(o => {
+    const mine = o.claimedBy === user.uid;
+    const claim = !o.claimedBy
+      ? `<button class="btn main sm" data-claim="${o.id}">📥 استلام الطلب</button>`
+      : `<span class="badge support">استلمه: ${esc(o.claimedByName||"")}</span>${(mine || RANK[role] >= 3) ? `<button class="btn ghost sm" data-release="${o.id}">إلغاء الاستلام</button>` : ""}`;
+    return `<div class="item"><div class="row" style="justify-content:space-between"><b>${sid(o.id)} · ${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small><div class="row" style="margin-top:10px">${claim}<button class="btn ghost sm" data-oc="${o.id}">💬 محادثة العميل${o.lastFrom==="user"?'<i class="dot"></i>':""}</button>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div>${o.lastText?`<small class="note">آخر رسالة: ${esc(o.lastText)}</small>`:""}</div>`;
+  }).join("") || empty);
 }
 const msgHTML = (m, mine) => `<div class="msg ${mine?"me":"them"}"><small>${esc(m.name||"")}${m.role&&RANK[m.role]>=1?" · "+ROLE_AR[m.role]:""}</small>${esc(m.text)}<time>${hm(m.createdAt)}</time></div>`;
 function tabRoom() {
@@ -593,6 +605,43 @@ function showAdmin(on) {
   window.scrollTo(0, 0);
 }
 
+/* ---------- محادثة الطلب ---------- */
+let oc = null;
+function closeModal() { $("modal").hidden = true; if (oc) { oc.unsub(); oc = null; } renderSupport(); }
+function openOrderChat(id) {
+  const o = [...orders, ...myOrders].find(x => x.id === id); if (!o) return;
+  if (oc) oc.unsub();
+  $("modalBox").innerHTML = `<div class="row" style="justify-content:space-between"><h3>محادثة الطلب ${sid(id)}</h3><button class="btn ghost sm" data-close>✕</button></div><small class="note">${esc(o.productName)} · ${ORDER_AR[o.status]||o.status}${o.claimedByName?" · استلمه: "+esc(o.claimedByName):""}</small><div id="ocThr" class="chat-b" style="height:300px;margin:12px 0"></div><div class="row"><input class="field" id="ocIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رسالتك"><button class="btn main sm" id="ocSend">إرسال</button></div>`;
+  $("modal").hidden = false;
+  oc = {id, msgs:[], unsub:() => {}};
+  oc.unsub = onSnapshot(query(collection(db,"orders",id,"messages"), orderBy("createdAt")), s => { oc.msgs = listE(s); renderOC(); }, e => say("ما نفعش: " + e.code));
+  try { localStorage.setItem("ba_oc_" + user.uid + "_" + id, String(Date.now())); } catch (_) {}
+}
+function renderOC() {
+  const t = $("ocThr"); if (!t || !oc) return;
+  t.innerHTML = oc.msgs.map(m => msgHTML(m, m.uid === user.uid)).join("") || '<p class="note" style="text-align:center">ابدأ المحادثة بخصوص الطلب.</p>';
+  t.scrollTop = t.scrollHeight;
+}
+async function sendOC() {
+  const inp = $("ocIn"), text = inp && inp.value.trim(); if (!text || !oc) return;
+  inp.value = "";
+  const staff = RANK[role] >= 2;
+  await addDoc(collection(db,"orders",oc.id,"messages"), {uid:user.uid, name:user.displayName||user.email, role, staff, text, createdAt:serverTimestamp()});
+  await updateDoc(doc(db,"orders",oc.id), {lastFrom: staff ? "staff" : "user", lastText:text.slice(0,80), lastMsgAt:serverTimestamp()});
+}
+async function claimOrder(id) {
+  const ref = doc(db,"orders",id);
+  try {
+    await runTransaction(db, async tx => {
+      const s = await tx.get(ref);
+      if (!s.exists() || s.data().claimedBy) throw new Error("taken");
+      tx.update(ref, {status:"processing", claimedBy:user.uid, claimedByName:user.displayName||user.email, claimedAt:serverTimestamp()});
+    });
+  } catch (e) { if (e.message === "taken") return say("حد استلم الطلب قبلك"); throw e; }
+  say("تم استلام الطلب، كلّم العميل من هنا");
+  const o = orders.find(x => x.id === id); if (o) openOrderChat(id);
+}
+
 /* ---------- شراء ---------- */
 function openBuy(p) {
   if (!user) return login();
@@ -600,8 +649,8 @@ function openBuy(p) {
   $("modal").hidden = false;
   $("confirmBuy").onclick = () => run(async () => {
     const m = pay[+document.querySelector('input[name=pm]:checked').value];
-    await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:Number(p.price), method:m.name, note:$("onote").value.trim(), status:"pending", createdAt:serverTimestamp()});
-    $("modalBox").innerHTML = `<h3>تم تسجيل طلبك</h3><p class="note">هتلاقيه في "طلباتي" تحت قسم الدعم. الإدارة هتراجع الدفع وتتواصل معاك.</p><button class="btn main" data-close>تمام</button>`;
+    const oref = await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:Number(p.price), method:m.name, note:$("onote").value.trim(), status:"pending", createdAt:serverTimestamp()});
+    $("modalBox").innerHTML = `<h3>تم تسجيل طلبك ✅</h3><p class="note">رقم الطلب ${sid(oref.id)}. في انتظار استلامه من فريقنا، وهتوصلك إشارة هنا أول ما حد يستلمه. تقدر تبعت رسالة أو إيصال الدفع من المحادثة.</p><div class="row"><button class="btn main" data-oc="${oref.id}">💬 تواصل بخصوص الطلب</button><button class="btn ghost" data-close>تمام</button></div>`;
   });
 }
 
@@ -612,7 +661,7 @@ document.addEventListener("click", e => {
   if (q(".links a") || q(".brand")) showAdmin(false);
   if (q("[data-login]")) return login();
   if (q("#logout") || q("#banLogout")) return run(async () => { try { if (user && RANK[role] >= 1) await deleteDoc(doc(db,"presence",user.uid)); } catch (_) {} await signOut(auth); });
-  if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
+  if (q("[data-close]") || t === $("modal")) return closeModal();
   if (q("#roomSend")) return run(sendRoom);
   if (q("#roomClear")) return confirm("تمسح كل رسائل شات الإدارة؟") && run(async () => { const s = await getDocs(collection(db,"staffRoom")); await Promise.all(s.docs.map(d => deleteDoc(d.ref))); say("تم المسح"); });
   if (q("#assignBtn")) return run(assignRole);
@@ -620,8 +669,12 @@ document.addEventListener("click", e => {
   if (q("#resetSite")) return confirm("ترجّع كل نصوص الموقع للافتراضي؟") && run(async () => { await deleteDoc(doc(db,"settings","site")); siteEdit = null; say("تم الرجوع للافتراضي"); renderTab(true); });
   if (q("#resetVisits")) return confirm("تصفّر عداد الزيارات؟") && run(async () => { await setDoc(doc(db,"stats","visits"), {count:0}); say("تم التصفير"); });
   let b;
+  if (q("#ocSend")) return run(sendOC);
+  if ((b = q("[data-oc]"))) return openOrderChat(b.dataset.oc);
+  if ((b = q("[data-claim]"))) return run(() => claimOrder(b.dataset.claim));
+  if ((b = q("[data-release]"))) return confirm("تلغي استلامك للطلب؟") && run(() => updateDoc(doc(db,"orders",b.dataset.release), {status:"pending", claimedBy:deleteField(), claimedByName:deleteField(), claimedAt:deleteField()}));
   if ((b = q("[data-delt]"))) return confirm("تحذف التذكرة نهائياً؟") && run(() => deleteDoc(doc(db,"tickets",b.dataset.delt)));
-  if ((b = q("[data-delo]"))) return confirm("تحذف الطلب نهائياً؟") && run(() => deleteDoc(doc(db,"orders",b.dataset.delo)));
+  if ((b = q("[data-delo]"))) return confirm("تحذف الطلب ومحادثته نهائياً؟") && run(async () => { const s = await getDocs(collection(db,"orders",b.dataset.delo,"messages")); await Promise.all(s.docs.map(d => deleteDoc(d.ref))); await deleteDoc(doc(db,"orders",b.dataset.delo)); });
   if ((b = q("[data-savep]"))) return run(async () => {
     const row = b.closest("[data-pid]"), g = k => row.querySelector(`[data-pf="${k}"]`);
     const name = g("name").value.trim(), price = Number(g("price").value);
@@ -680,6 +733,7 @@ document.addEventListener("input", e => {
 document.addEventListener("keydown", e => {
   if (e.key !== "Enter" || e.shiftKey) return;
   if (e.target.id === "roomIn") $("roomSend").click();
+  if (e.target.id === "ocIn") $("ocSend").click();
 });
 
 /* ---------- الاتصال بقاعدة البيانات ---------- */
