@@ -132,13 +132,15 @@ textarea.field{min-height:100px;resize:vertical}
 .pm small{display:block;color:var(--mute);margin-inline-start:26px}
 .pm input{accent-color:var(--pink);margin-inline-end:8px}
 .price p.d{flex:1;color:var(--mute);font-size:.95rem;margin:6px 0 18px}
+#adminLink{color:var(--pink);font-weight:600}
+@media(max-width:760px){.links{display:flex!important;gap:0}.links a:not(#adminLink){display:none}}
 </style>
 </head>
 <body>
 
 <nav><div class="wrap">
   <a href="#top" class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'">BOTAURA</a>
-  <div class="links"><a href="#services">الخدمات</a><a href="#pricing">المنتجات</a><a href="#payments">الدفع</a><a href="#support">الدعم</a><a href="#permissions">حاسبة الصلاحيات</a></div>
+  <div class="links"><a href="#services">الخدمات</a><a href="#pricing">المنتجات</a><a href="#payments">الدفع</a><a href="#support">الدعم</a><a href="#" id="adminLink" hidden>الإدارة</a></div>
   <div id="auth"></div>
 </div></nav>
 
@@ -149,7 +151,7 @@ textarea.field{min-height:100px;resize:vertical}
       <p>بنصمم ونبيع بوتات جاهزة ومخصصة، ونتابع سيرفرك بدعم فني سريع. تختار الباقة، ونسلّمك البوت شغّال.</p>
       <div class="cta">
         <a class="btn main" href="#pricing">شوف الباقات</a>
-        <a class="btn ghost" href="#permissions">احسب صلاحيات البوت</a>
+        <a class="btn ghost" href="#support">محتاج مساعدة؟</a>
       </div>
     </div>
     <div class="orbit" aria-hidden="true">
@@ -207,26 +209,7 @@ textarea.field{min-height:100px;resize:vertical}
     <div class="grid" id="products"></div>
   </section>
 
-  <section id="permissions">
-    <h2>حاسبة صلاحيات بوت ديسكورد</h2>
-    <p class="sub">اختار الصلاحيات اللي البوت محتاجها، وهنطلعلك رابط الدعوة جاهز. اعطي البوت اللي يحتاجه بس، ده أأمن لسيرفرك.</p>
-    <div class="perm">
-      <div class="panel">
-        <div class="presets" id="presets"></div>
-        <div class="plist" id="plist"></div>
-      </div>
-      <div class="panel out">
-        <small style="color:var(--mute)">رقم الصلاحيات</small>
-        <div class="num" id="pnum">0</div>
-        <label for="cid">Client ID بتاع البوت</label>
-        <input id="cid" inputmode="numeric" placeholder="123456789012345678">
-        <label for="plink">رابط الدعوة</label>
-        <input id="plink" readonly>
-        <button class="btn main" style="width:100%;margin-top:14px" id="copy">نسخ الرابط</button>
-        <p class="note">الـ Client ID تلاقيه في Discord Developer Portal تحت اسم تطبيقك، في صفحة General Information.</p>
-      </div>
-    </div>
-  </section>
+  
 
   <section id="payments">
     <h2>طرق الدفع</h2>
@@ -252,12 +235,6 @@ textarea.field{min-height:100px;resize:vertical}
     </div>
   </section>
 
-  <section id="panel" hidden>
-    <h2>لوحة التحكم</h2><div style="height:16px"></div>
-    <div class="tabs" id="tabs"></div>
-    <div class="panel" id="tabBody"></div>
-  </section>
-
   <section id="faq">
     <h2>أسئلة شائعة</h2><div style="height:18px"></div>
     <details><summary>أستلم البوت إزاي؟</summary><p>بنضيفه لسيرفرك بنفسنا، أو نسلمك التوكن والملفات لو الاستضافة عندك.</p></details>
@@ -272,13 +249,40 @@ textarea.field{min-height:100px;resize:vertical}
   </section>
 </main>
 
+<main id="adminMain" class="wrap" hidden>
+  <section id="panel">
+    <h2>الإدارة</h2><div style="height:16px"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="panel" id="tabBody"></div>
+    <div id="calcBox" hidden>
+      <p class="sub">اختار الصلاحيات اللي البوت محتاجها وهنطلعلك رابط الدعوة جاهز. اعطي البوت اللي يحتاجه بس.</p>
+      <div class="perm">
+      <div class="panel">
+        <div class="presets" id="presets"></div>
+        <div class="plist" id="plist"></div>
+      </div>
+      <div class="panel out">
+        <small style="color:var(--mute)">رقم الصلاحيات</small>
+        <div class="num" id="pnum">0</div>
+        <label for="cid">Client ID بتاع البوت</label>
+        <input id="cid" inputmode="numeric" placeholder="123456789012345678">
+        <label for="plink">رابط الدعوة</label>
+        <input id="plink" readonly>
+        <button class="btn main" style="width:100%;margin-top:14px" id="copy">نسخ الرابط</button>
+        <p class="note">الـ Client ID تلاقيه في Discord Developer Portal تحت اسم تطبيقك، في صفحة General Information.</p>
+      </div>
+    </div>
+    </div>
+  </section>
+</main>
+
 <footer>© <span id="yr"></span> BOTAURA، بوتات ديسكورد</footer>
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 <div class="toast" id="toast">تم النسخ</div>
 
 <script>
 /* ===== الإعدادات: عدّل هنا ===== */
-const DISCORD_INVITE = "https://discord.gg/GFNU9pzbMK";   // حط رابط سيرفرك
+const DISCORD_INVITE = "https://discord.gg/PUT_YOUR_INVITE";   // حط رابط سيرفرك
 const COUNTER_NS = "botaura-barq05";                            // اسم العداد (غيّره لو حبيت)
 
 document.getElementById('yr').textContent = new Date().getFullYear();
@@ -421,18 +425,22 @@ function renderSupport() {
 }
 
 /* ---------- لوحة التحكم ---------- */
-const TABS = [["tickets","الدعم والبلاغات",1],["orders","الطلبات",2],["users","الرتب",2],["products","المنتجات",3],["payments","طرق الدفع",3]];
+const TABS = [["tickets","استقبال التذاكر",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["calc","حاسبة الصلاحيات",1],["orders","الطلبات",2],["users","الرتب",2]];
 function renderPanel() {
-  const r = RANK[role];
-  $("panel").hidden = !user || r < 1;
-  if ($("panel").hidden) return;
+  const r = user ? RANK[role] : -1;
+  const open = staffTickets.filter(x => x.status === "open").length;
+  $("adminLink").hidden = r < 1;
+  $("adminLink").textContent = "الإدارة" + (open && r >= 1 ? ` (${num(open)})` : "");
+  if (r < 1) { if (!$("adminMain").hidden) showAdmin(false); return; }
   const allowed = TABS.filter(t => r >= t[2]);
   if (!allowed.find(t => t[0] === curTab)) curTab = allowed[0][0];
   $("tabs").innerHTML = allowed.map(t => `<button class="chip ${t[0]===curTab?"on":""}" data-tab="${t[0]}">${t[1]}${t[0]==="tickets"?` (${staffTickets.filter(x=>x.status==="open").length})`:""}</button>`).join("");
   renderTab(true);
 }
 function renderTab(force) {
-  const el = $("tabBody");
+  const el = $("tabBody"), calc = curTab === "calc";
+  $("calcBox").hidden = !calc; el.hidden = calc;
+  if (calc) return;
   if (!force && el.contains(document.activeElement) && document.activeElement.value) return;
   el.innerHTML = ({tickets:tabTickets, orders:tabOrders, users:tabUsers, products:tabProducts, payments:tabPayments}[curTab])();
 }
@@ -460,6 +468,14 @@ function tabPayments() {
 }
 function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); }
 
+/* ---------- التبديل بين الموقع والإدارة ---------- */
+function showAdmin(on) {
+  if (on && !(user && RANK[role] >= 1)) return;
+  $("top").hidden = on; $("adminMain").hidden = !on;
+  $("adminLink").style.textDecoration = on ? "underline" : "";
+  window.scrollTo(0, 0);
+}
+
 /* ---------- شراء ---------- */
 function openBuy(p) {
   if (!user) return login();
@@ -475,6 +491,8 @@ function openBuy(p) {
 /* ---------- الأحداث ---------- */
 document.addEventListener("click", e => {
   const t = e.target, q = s => t.closest(s);
+  if (q("#adminLink")) { e.preventDefault(); return showAdmin(true); }
+  if (q(".links a") || q(".brand")) showAdmin(false);
   if (q("[data-login]")) return login();
   if (q("#logout")) return signOut(auth);
   if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
