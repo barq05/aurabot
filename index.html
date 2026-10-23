@@ -167,6 +167,14 @@ textarea.field{min-height:100px;resize:vertical}
 .ban-box h2{color:#fda4af;margin:6px 0 10px}
 .ban-box p{color:var(--mute)}
 .ban-box small{display:block;margin-top:14px;color:var(--lav)}
+.visit-fab{position:fixed;left:18px;bottom:18px;z-index:30;display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:99px;background:#1d0a52ee;backdrop-filter:blur(8px);border:1px solid var(--pink);box-shadow:0 8px 28px #7c3aed66;direction:ltr}
+.visit-fab i{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80;animation:pulse 1.6s infinite}
+.visit-fab b{color:var(--pink);font-variant-numeric:tabular-nums}
+.visit-fab small{color:var(--mute)}
+@keyframes pulse{50%{opacity:.3}}
+.online{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#2a117088;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:12px 0 16px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#150538;border:1px solid var(--line);border-radius:99px;padding:3px 12px 3px 4px;font-size:.88rem}
+.pill img{width:22px;height:22px;border-radius:50%}
 </style>
 </head>
 <body>
@@ -216,7 +224,6 @@ textarea.field{min-height:100px;resize:vertical}
   </div>
 
   <div class="stats">
-    <div class="stat live" id="visitsBox" hidden><b id="visits">...</b><small>زيارة للموقع (للإدارة فقط)</small></div>
     <div class="stat"><b id="statBots">0</b><small>بوت تم تسليمه</small></div>
     <div class="stat"><b id="statServers">0</b><small>سيرفر بنتابعه</small></div>
     <div class="stat"><b>24/7</b><small>دعم فني</small></div>
@@ -274,19 +281,15 @@ textarea.field{min-height:100px;resize:vertical}
 
 <main id="adminMain" class="wrap" hidden>
   <section id="panel">
-    <h2>الإدارة</h2><div style="height:16px"></div>
+    <h2>الإدارة</h2>
+    <div class="online" id="onlineBar"></div>
     <div class="tabs" id="tabs"></div>
     <div class="panel" id="tabBody"></div>
   </section>
 </main>
 
 <footer>© <span id="yr"></span> <span id="brandFoot">BOTAURA</span>، بوتات ديسكورد</footer>
-<button class="fab" id="chatFab" aria-label="تواصل مع الإدارة">💬<i id="chatDot" hidden></i></button>
-<div class="chatbox" id="chatBox" hidden>
-  <div class="chat-h"><b>تواصل مع الإدارة</b><button id="chatClose" class="x" aria-label="إغلاق">✕</button></div>
-  <div class="chat-b" id="chatMsgs"></div>
-  <div class="chat-f"><input class="field" id="chatIn" maxlength="1000" placeholder="اكتب رسالتك"><button class="btn main sm" id="chatSend">إرسال</button></div>
-</div>
+<div class="visit-fab" id="visitsBox" hidden><i></i><b id="visits">...</b><small>زيارة</small></div>
 <div class="ban" id="banScreen" hidden>
   <div class="ban-box">
     <div class="ban-ic">🚫</div>
@@ -307,7 +310,7 @@ textarea.field{min-height:100px;resize:vertical}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy,getDocs,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ===== الصق إعدادات Firebase هنا ===== */
 const firebaseConfig = {
@@ -372,7 +375,7 @@ let site = DEF_SITE, siteEdit = null;
 let auth, db, user = null, role = "buyer", unsubs = [];
 let products = [], pay = DEF_PAY, payEdit = [];
 let myTickets = [], myOrders = [], staffTickets = [], orders = [], usersList = [], curTab = "tickets";
-let grants = [], chatList = [], chatMsgs = [], staffMsgs = [], curChat = null, chatUnsub = null, orderFilter = "all";
+let grants = [], roomMsgs = [], online = [], orderFilter = "all";
 
 if (ok) { const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }
 
@@ -412,16 +415,16 @@ function renderSupport() {
 }
 
 /* ---------- لوحة التحكم ---------- */
-const TABS = [["tickets","استقبال التذاكر",1],["orders","استقبال الطلبات",2],["chat","شات الإدارة",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["perms","الصلاحيات",2],["site","إعدادات الموقع",4]];
+const TABS = [["tickets","استقبال التذاكر",1],["orders","استقبال الطلبات",2],["room","تواصل الإدارة",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["perms","الصلاحيات",2],["site","إعدادات الموقع",4]];
 const counts = () => ({
   tickets: staffTickets.filter(x => x.status === "open").length,
   orders: orders.filter(x => x.status === "pending").length,
-  chat: chatList.filter(c => c.lastFrom === "user").length
+  room: roomUnread()
 });
 function renderPanel(force) {
   const r = user ? RANK[role] : -1;
   const c = counts();
-  const total = c.tickets + (r >= 2 ? c.orders : 0) + c.chat;
+  const total = c.tickets + (r >= 2 ? c.orders : 0) + c.room;
   $("adminLink").hidden = r < 1;
   $("adminLink").textContent = "الإدارة" + (total && r >= 1 ? ` (${num(total)})` : "");
   if (r < 1) { if (!$("adminMain").hidden) showAdmin(false); return; }
@@ -433,8 +436,8 @@ function renderPanel(force) {
 function renderTab(force) {
   const el = $("tabBody");
   if (!force && el.contains(document.activeElement) && document.activeElement.value) return;
-  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, chat:tabChat, products:tabProducts, payments:tabPayments, perms:tabPerms, site:tabSite}[curTab])();
-  if (curTab === "chat") updateStaffChat();
+  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, room:tabRoom, products:tabProducts, payments:tabPayments, perms:tabPerms, site:tabSite}[curTab])();
+  if (curTab === "room") updateRoom();
 }
 const empty = '<p class="note">مفيش حاجة لسه.</p>';
 function tabTickets() {
@@ -446,23 +449,18 @@ function tabOrders() {
   const list = orders.filter(o => orderFilter === "all" || o.status === orderFilter).sort(byNew);
   return `<div class="tabs">${chips}</div>` + (list.map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small></div>`).join("") || empty);
 }
-const msgHTML = (m, mine) => `<div class="msg ${mine?"me":"them"}"><small>${esc(m.name||"")}${m.staff?" · إدارة":""}</small>${esc(m.text)}<time>${hm(m.createdAt)}</time></div>`;
-function tabChat() {
-  return `<div class="chatgrid"><div id="chList"></div><div><div id="thr" class="chat-b"></div><div class="row"><input class="field" id="stIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رد"><button class="btn main sm" id="stSend">إرسال</button>${RANK[role]>=4?'<button class="btn red sm" id="delChat">حذف المحادثة</button>':""}</div></div></div>`;
+const msgHTML = (m, mine) => `<div class="msg ${mine?"me":"them"}"><small>${esc(m.name||"")}${m.role&&RANK[m.role]>=1?" · "+ROLE_AR[m.role]:""}</small>${esc(m.text)}<time>${hm(m.createdAt)}</time></div>`;
+function tabRoom() {
+  return `<div id="roomThr" class="chat-b" style="height:360px;margin-bottom:10px"></div><div class="row"><input class="field" id="roomIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رسالة لفريق الإدارة"><button class="btn main sm" id="roomSend">إرسال</button>${RANK[role]>=4?'<button class="btn red sm" id="roomClear">مسح الشات</button>':""}</div>`;
 }
-function updateStaffChat() {
-  const l = $("chList"); if (!l) return;
-  const sorted = [...chatList].sort((a, b) => ms(b.lastAt) - ms(a.lastAt));
-  if (!curChat && sorted.length) return openStaffChat(sorted[0].id);
-  l.innerHTML = sorted.map(c => `<div class="citem ${c.id===curChat?"on":""}" data-chat="${esc(c.id)}"><b>${esc(c.name||c.email||"بدون اسم")}</b>${c.lastFrom==="user"?'<i class="dot"></i>':""}<small>${esc(c.lastText)}</small></div>`).join("") || '<p class="note">مفيش محادثات لسه.</p>';
-  const t = $("thr");
-  t.innerHTML = !curChat ? '<p class="note" style="text-align:center">لما حد يبعت رسالة هتظهر هنا.</p>' : (staffMsgs.map(m => msgHTML(m, m.staff)).join("") || '<p class="note" style="text-align:center">مفيش رسائل.</p>');
+function updateRoom() {
+  const t = $("roomThr"); if (!t) return;
+  t.innerHTML = roomMsgs.map(m => msgHTML(m, m.uid === user.uid)).join("") || '<p class="note" style="text-align:center">ابدأ المحادثة مع فريق الإدارة.</p>';
   t.scrollTop = t.scrollHeight;
-}
-function openStaffChat(id) {
-  curChat = id; staffMsgs = []; chatUnsub && chatUnsub();
-  chatUnsub = onSnapshot(query(collection(db,"chats",id,"messages"), orderBy("createdAt")), s => { staffMsgs = listE(s); updateStaffChat(); }, e => console.warn(e.code));
-  updateStaffChat();
+  if (curTab === "room" && !$("adminMain").hidden && roomUnread()) {
+    try { localStorage.setItem("ba_room_" + user.uid, String(Date.now())); } catch (_) {}
+    renderPanel();
+  }
 }
 function tabPerms() {
   const opts = assignable();
@@ -502,15 +500,16 @@ function renderBan() {
   $("banMail").textContent = b ? user.email : "";
   document.body.style.overflow = b ? "hidden" : "";
 }
-function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderChatUI(); renderSite(); renderBan(); }
+function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderOnline(); renderSite(); renderBan(); }
 
 /* ---------- محتوى الموقع (قابل للتعديل من المالك) ---------- */
-function countTo(el, to) {
+function countTo(el, to, plus = true) {
   to = Number(to) || 0;
   if (el.dataset.v === String(to)) return;
+  const from = Number(el.dataset.v) || 0;
   el.dataset.v = String(to);
   const t0 = performance.now();
-  const step = t => { const k = Math.min(1, (t - t0) / 900); el.textContent = num(Math.round(to * k)) + (k === 1 && to ? "+" : ""); if (k < 1) requestAnimationFrame(step); };
+  const step = t => { const k = Math.min(1, (t - t0) / 900); el.textContent = num(Math.round(from + (to - from) * k)) + (k === 1 && to && plus ? "+" : ""); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 function renderSite() {
@@ -527,34 +526,38 @@ function renderSite() {
   $("contactTitle").textContent = s.contactTitle; $("contactText").textContent = s.contactText;
 }
 
-/* ---------- الشات ---------- */
-function renderChatUI() {
-  $("chatFab").hidden = !$("adminMain").hidden;
-  const box = $("chatBox");
-  if (!user) { box.hidden = true; $("chatDot").hidden = true; return; }
-  const open = !box.hidden, last = chatMsgs[chatMsgs.length - 1], key = "ba_chat_" + user.uid;
-  if (open) { try { localStorage.setItem(key, String(Date.now())); } catch (_) {} }
-  let seen = 0; try { seen = +localStorage.getItem(key) || 0; } catch (_) {}
-  $("chatDot").hidden = open || !(last && last.staff && ms(last.createdAt) > seen);
-  if (open) {
-    const el = $("chatMsgs");
-    el.innerHTML = chatMsgs.length ? chatMsgs.map(m => msgHTML(m, m.uid === user.uid)).join("") : '<p class="note" style="text-align:center">ابعت رسالتك وهترد عليك الإدارة هنا.</p>';
-    el.scrollTop = el.scrollHeight;
-  }
+/* ---------- تواصل الإدارة + المتصلين الآن ---------- */
+let presTimer = null;
+function roomUnread() {
+  if (!user || RANK[role] < 1) return 0;
+  let seen = 0; try { seen = +localStorage.getItem("ba_room_" + user.uid) || 0; } catch (_) {}
+  return roomMsgs.filter(m => m.uid !== user.uid && ms(m.createdAt) > seen).length;
 }
-function toggleChat(on) {
-  if (!user) return login();
-  const box = $("chatBox"); box.hidden = on === undefined ? !box.hidden : !on;
-  renderChatUI(); if (!box.hidden) $("chatIn").focus();
+async function sendRoom() {
+  const inp = $("roomIn"), text = inp.value.trim(); if (!text) return;
+  inp.value = "";
+  await addDoc(collection(db,"staffRoom"), {uid:user.uid, name:user.displayName||user.email, role, text, createdAt:serverTimestamp()});
 }
-async function sendChat(inp, target) {
-  const text = inp.value.trim(); if (!text) return;
-  const uid = target || user.uid, mine = uid === user.uid; inp.value = "";
-  await addDoc(collection(db,"chats",uid,"messages"), {uid:user.uid, name:user.displayName||user.email, role, staff:RANK[role]>=1, text, createdAt:serverTimestamp()});
-  const meta = {lastText:text.slice(0,80), lastAt:serverTimestamp(), lastFrom: mine ? "user" : "staff"};
-  if (mine) Object.assign(meta, {uid, email:user.email, name:user.displayName||""});
-  await setDoc(doc(db,"chats",uid), meta, {merge:true});
+function beat() {
+  if (!user || RANK[role] < 1 || document.visibilityState !== "visible") return;
+  setDoc(doc(db,"presence",user.uid), {name:user.displayName||user.email, role, photo:user.photoURL||"", seen:serverTimestamp()}).catch(() => {});
 }
+function startPresence() {
+  clearInterval(presTimer); beat();
+  presTimer = setInterval(() => { beat(); renderOnline(); }, 30000);
+}
+function renderOnline() {
+  const el = $("onlineBar"); if (!el) return;
+  if (!user || RANK[role] < 1) { el.innerHTML = ""; return; }
+  const now = Date.now();
+  const list = online.filter(p => now - ms(p.seen) < 90000).sort((a, b) => (RANK[b.role] ?? 0) - (RANK[a.role] ?? 0));
+  el.innerHTML = `<b>🟢 الإدارة المتصلة الآن (${num(list.length)})</b>` + (list.length
+    ? list.map(p => `<span class="pill">${p.photo ? `<img src="${esc(p.photo)}" alt="" referrerpolicy="no-referrer">` : ""}${esc(p.name)} <span class="badge ${esc(p.role)}">${ROLE_AR[p.role] || ""}</span>${p.id === user.uid ? " (إنت)" : ""}</span>`).join("")
+    : '<span class="note">مفيش حد متصل</span>');
+}
+document.addEventListener("visibilitychange", beat);
+window.addEventListener("pageshow", beat);
+window.addEventListener("pagehide", () => { if (user && RANK[role] >= 1) deleteDoc(doc(db,"presence",user.uid)).catch(() => {}); });
 
 async function saveSite() {
   const s = siteEdit;
@@ -586,8 +589,6 @@ async function assignRole() {
 function showAdmin(on) {
   if (on && !(user && RANK[role] >= 1)) return;
   $("top").hidden = on; $("adminMain").hidden = !on;
-  if (on) $("chatBox").hidden = true;
-  renderChatUI();
   $("adminLink").style.textDecoration = on ? "underline" : "";
   window.scrollTo(0, 0);
 }
@@ -610,24 +611,15 @@ document.addEventListener("click", e => {
   if (q("#adminLink")) { e.preventDefault(); return showAdmin(true); }
   if (q(".links a") || q(".brand")) showAdmin(false);
   if (q("[data-login]")) return login();
-  if (q("#logout") || q("#banLogout")) return signOut(auth);
+  if (q("#logout") || q("#banLogout")) return run(async () => { try { if (user && RANK[role] >= 1) await deleteDoc(doc(db,"presence",user.uid)); } catch (_) {} await signOut(auth); });
   if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
-  if (q("#chatFab")) return toggleChat();
-  if (q("#chatClose")) return toggleChat(false);
-  if (q("#chatSend")) return run(() => sendChat($("chatIn")));
-  if (q("#stSend")) return run(() => sendChat($("stIn"), curChat));
+  if (q("#roomSend")) return run(sendRoom);
+  if (q("#roomClear")) return confirm("تمسح كل رسائل شات الإدارة؟") && run(async () => { const s = await getDocs(collection(db,"staffRoom")); await Promise.all(s.docs.map(d => deleteDoc(d.ref))); say("تم المسح"); });
   if (q("#assignBtn")) return run(assignRole);
   if (q("#saveSite")) return run(saveSite);
   if (q("#resetSite")) return confirm("ترجّع كل نصوص الموقع للافتراضي؟") && run(async () => { await deleteDoc(doc(db,"settings","site")); siteEdit = null; say("تم الرجوع للافتراضي"); renderTab(true); });
   if (q("#resetVisits")) return confirm("تصفّر عداد الزيارات؟") && run(async () => { await setDoc(doc(db,"stats","visits"), {count:0}); say("تم التصفير"); });
-  if (q("#delChat")) return curChat && confirm("تحذف المحادثة كلها؟") && run(async () => {
-    const id = curChat, s = await getDocs(collection(db,"chats",id,"messages"));
-    await Promise.all(s.docs.map(d => deleteDoc(d.ref)));
-    await deleteDoc(doc(db,"chats",id));
-    chatUnsub && chatUnsub(); chatUnsub = null; curChat = null; staffMsgs = []; updateStaffChat();
-  });
   let b;
-  if ((b = q("[data-chat]"))) return openStaffChat(b.dataset.chat);
   if ((b = q("[data-delt]"))) return confirm("تحذف التذكرة نهائياً؟") && run(() => deleteDoc(doc(db,"tickets",b.dataset.delt)));
   if ((b = q("[data-delo]"))) return confirm("تحذف الطلب نهائياً؟") && run(() => deleteDoc(doc(db,"orders",b.dataset.delo)));
   if ((b = q("[data-savep]"))) return run(async () => {
@@ -687,8 +679,7 @@ document.addEventListener("input", e => {
 
 document.addEventListener("keydown", e => {
   if (e.key !== "Enter" || e.shiftKey) return;
-  if (e.target.id === "chatIn") $("chatSend").click();
-  if (e.target.id === "stIn") $("stSend").click();
+  if (e.target.id === "roomIn") $("roomSend").click();
 });
 
 /* ---------- الاتصال بقاعدة البيانات ---------- */
@@ -706,8 +697,8 @@ if (ok) {
   } catch(_) {}
 
   onAuthStateChanged(auth, async u => {
-    unsubs.forEach(f => f()); unsubs = []; chatUnsub && chatUnsub(); chatUnsub = null; curChat = null;
-    user = u; role = "buyer"; myTickets = myOrders = staffTickets = orders = usersList = grants = chatList = chatMsgs = staffMsgs = [];
+    unsubs.forEach(f => f()); unsubs = []; clearInterval(presTimer);
+    user = u; role = "buyer"; myTickets = myOrders = staffTickets = orders = usersList = grants = roomMsgs = online = [];
     if (u) {
       try {
         const isOwner = u.email === FOUNDER_EMAIL, ref = doc(db,"users",u.uid), snap = await getDoc(ref);
@@ -734,16 +725,17 @@ if (ok) {
       const r = RANK[role];
       sub(query(collection(db,"tickets"), where("uid","==",u.uid)), s => { myTickets = list(s); renderSupport(); });
       sub(query(collection(db,"orders"), where("uid","==",u.uid)), s => { myOrders = list(s); renderSupport(); });
-      sub(query(collection(db,"chats",u.uid,"messages"), orderBy("createdAt")), s => { chatMsgs = listE(s); renderChatUI(); });
       if (r >= 1) {
         sub(collection(db,"tickets"), s => { staffTickets = list(s); renderPanel(); });
-        sub(collection(db,"chats"), s => { chatList = list(s); renderPanel(); updateStaffChat(); });
+        sub(query(collection(db,"staffRoom"), orderBy("createdAt","desc"), limit(100)), s => { roomMsgs = listE(s).reverse(); renderPanel(); updateRoom(); });
+        sub(collection(db,"presence"), s => { online = listE(s); renderOnline(); });
+        startPresence();
       }
       if (r >= 2) {
         sub(collection(db,"orders"), s => { orders = list(s); renderPanel(); });
         sub(collection(db,"users"), s => { usersList = list(s); if (curTab==="perms") renderTab(); });
         sub(collection(db,"grants"), s => { grants = list(s); if (curTab==="perms") renderTab(); });
-        sub(doc(db,"stats","visits"), s => { $("visits").textContent = num(s.exists() ? s.data().count : 0); });
+        sub(doc(db,"stats","visits"), s => countTo($("visits"), s.exists() ? s.data().count : 0, false));
       }
     }
     renderAll();
