@@ -160,6 +160,13 @@ textarea.field{min-height:100px;resize:vertical}
 @media(max-width:700px){.chatgrid{grid-template-columns:1fr}}
 .badge.owner{background:#ea580c}
 .badge.founder{background:linear-gradient(135deg,#f59e0b,#ef4444,#e879f9);box-shadow:0 0 14px #f59e0b77}
+.badge.banned{background:#be123c}
+.ban{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;text-align:center;background:radial-gradient(60vw 60vw at 50% 0%,#7f1d3d 0%,transparent 60%),#150538}
+.ban-box{max-width:480px;background:#1d0a52;border:1px solid #be123c;border-radius:24px;padding:36px 28px;box-shadow:0 0 60px #be123c44}
+.ban-ic{font-size:3.4rem;line-height:1.2}
+.ban-box h2{color:#fda4af;margin:6px 0 10px}
+.ban-box p{color:var(--mute)}
+.ban-box small{display:block;margin-top:14px;color:var(--lav)}
 </style>
 </head>
 <body>
@@ -280,6 +287,18 @@ textarea.field{min-height:100px;resize:vertical}
   <div class="chat-b" id="chatMsgs"></div>
   <div class="chat-f"><input class="field" id="chatIn" maxlength="1000" placeholder="اكتب رسالتك"><button class="btn main sm" id="chatSend">إرسال</button></div>
 </div>
+<div class="ban" id="banScreen" hidden>
+  <div class="ban-box">
+    <div class="ban-ic">🚫</div>
+    <h2>حسابك محظور</h2>
+    <p>إنت متبند من الموقع. لو شايف إن ده حصل بالغلط، تواصل مع الإدارة عبر ديسكورد.</p>
+    <small id="banMail" dir="ltr"></small>
+    <div class="row" style="justify-content:center;margin-top:22px">
+      <a class="btn main" data-discord target="_blank" rel="noopener" href="#">تواصل مع الإدارة على ديسكورد</a>
+      <button class="btn ghost" id="banLogout">تسجيل الخروج</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 <div class="toast" id="toast">تم النسخ</div>
 
@@ -306,9 +325,9 @@ const ok = !firebaseConfig.apiKey.startsWith("PASTE");
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num = n => Number(n).toLocaleString("ar-EG");
-const RANK = {buyer:0, support:1, admin:2, owner:3, founder:4};
-const assignable = () => role === "founder" ? ["buyer","support","admin","owner"] : role === "owner" ? ["buyer","support","admin"] : ["buyer","support"];
-const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر", founder:"👑 المالك"};
+const RANK = {banned:-1, buyer:0, support:1, admin:2, owner:3, founder:4};
+const assignable = () => role === "founder" ? ["buyer","support","admin","owner","banned"] : role === "owner" ? ["buyer","support","admin","banned"] : ["buyer","support","banned"];
+const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر", founder:"👑 المالك", banned:"🚫 محظور"};
 const ORDER_AR = {pending:"قيد المراجعة", paid:"تم الدفع", done:"تم التسليم", cancelled:"ملغي"};
 const listE = s => s.docs.map(d => ({id:d.id, ...d.data({serverTimestamps:"estimate"})}));
 const hm = t => { const v = t?.toMillis?.() ?? t ?? 0; return v ? new Date(v).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}) : ""; };
@@ -477,7 +496,13 @@ function tabProducts() {
 function tabPayments() {
   return payEdit.map((m,i)=>`<div class="row"><input class="field" style="flex:1" data-pi="${i}" data-f="name" value="${esc(m.name)}" placeholder="الاسم (مثلاً فودافون كاش)"><input class="field" style="flex:2" data-pi="${i}" data-f="details" value="${esc(m.details)}" placeholder="الرقم أو التفاصيل"><button class="btn red sm" data-delpay="${i}" style="margin-bottom:10px">حذف</button></div>`).join("") + `<div class="row"><button class="btn ghost" id="addPay">إضافة طريقة</button><button class="btn main" id="savePay">حفظ</button></div>`;
 }
-function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderChatUI(); renderSite(); }
+function renderBan() {
+  const b = !!user && role === "banned";
+  $("banScreen").hidden = !b;
+  $("banMail").textContent = b ? user.email : "";
+  document.body.style.overflow = b ? "hidden" : "";
+}
+function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderChatUI(); renderSite(); renderBan(); }
 
 /* ---------- محتوى الموقع (قابل للتعديل من المالك) ---------- */
 function countTo(el, to) {
@@ -585,7 +610,7 @@ document.addEventListener("click", e => {
   if (q("#adminLink")) { e.preventDefault(); return showAdmin(true); }
   if (q(".links a") || q(".brand")) showAdmin(false);
   if (q("[data-login]")) return login();
-  if (q("#logout")) return signOut(auth);
+  if (q("#logout") || q("#banLogout")) return signOut(auth);
   if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
   if (q("#chatFab")) return toggleChat();
   if (q("#chatClose")) return toggleChat(false);
@@ -696,6 +721,16 @@ if (ok) {
           if (isOwner && role !== "founder") { await updateDoc(ref, {role:"founder"}); role = "founder"; }
         }
       } catch (e) { say("تأكد إنك نشرت قواعد Firestore (Rules): " + e.code); }
+      sub(doc(db,"users",u.uid), s => {
+        const nr = s.exists() && s.data().role;
+        if (!nr || nr === role || !(nr in RANK)) return;
+        if (nr === "banned") { role = "banned"; renderAll(); }
+        else {
+          let last = 0; try { last = +sessionStorage.getItem("ba_rl") || 0; } catch (_) {}
+          if (Date.now() - last > 5000) { try { sessionStorage.setItem("ba_rl", String(Date.now())); } catch (_) {} location.reload(); }
+        }
+      });
+      if (role === "banned") { renderAll(); return; }
       const r = RANK[role];
       sub(query(collection(db,"tickets"), where("uid","==",u.uid)), s => { myTickets = list(s); renderSupport(); });
       sub(query(collection(db,"orders"), where("uid","==",u.uid)), s => { myOrders = list(s); renderSupport(); });
