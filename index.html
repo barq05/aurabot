@@ -158,12 +158,14 @@ textarea.field{min-height:100px;resize:vertical}
 .citem small{display:block;color:var(--mute);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .chatgrid .chat-b{height:340px;margin-bottom:10px}
 @media(max-width:700px){.chatgrid{grid-template-columns:1fr}}
+.badge.owner{background:#ea580c}
+.badge.founder{background:linear-gradient(135deg,#f59e0b,#ef4444,#e879f9);box-shadow:0 0 14px #f59e0b77}
 </style>
 </head>
 <body>
 
 <nav><div class="wrap">
-  <a href="#top" class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'">BOTAURA</a>
+  <a href="#top" class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'"><span id="brandName">BOTAURA</span></a>
   <div class="links"><a href="#services">الخدمات</a><a href="#pricing">المنتجات</a><a href="#payments">الدفع</a><a href="#support">الدعم</a><a href="#" id="adminLink" hidden>الإدارة</a></div>
   <div id="auth"></div>
 </div></nav>
@@ -171,8 +173,8 @@ textarea.field{min-height:100px;resize:vertical}
 <main id="top" class="wrap">
   <div class="hero">
     <div>
-      <h1>بوتات ديسكورد تخلّي <span>سيرفرك</span> يشتغل لوحده</h1>
-      <p>بنصمم ونبيع بوتات جاهزة ومخصصة، ونتابع سيرفرك بدعم فني سريع. تختار الباقة، ونسلّمك البوت شغّال.</p>
+      <h1 id="heroTitle"></h1>
+      <p id="heroText"></p>
       <div class="cta">
         <a class="btn main" href="#pricing">شوف الباقات</a>
         <a class="btn ghost" href="#support">محتاج مساعدة؟</a>
@@ -208,23 +210,15 @@ textarea.field{min-height:100px;resize:vertical}
 
   <div class="stats">
     <div class="stat live" id="visitsBox" hidden><b id="visits">...</b><small>زيارة للموقع (للإدارة فقط)</small></div>
-    <div class="stat"><b data-count="120">0</b><small>بوت تم تسليمه</small></div>
-    <div class="stat"><b data-count="85">0</b><small>سيرفر بنتابعه</small></div>
+    <div class="stat"><b id="statBots">0</b><small>بوت تم تسليمه</small></div>
+    <div class="stat"><b id="statServers">0</b><small>سيرفر بنتابعه</small></div>
     <div class="stat"><b>24/7</b><small>دعم فني</small></div>
   </div>
-  <p class="note" style="margin-bottom:0">الأرقام التجريبية (بوت / سيرفر) غيّرها من الكود بأرقامك الحقيقية.</p>
 
   <section id="services">
-    <h2>إيه اللي بنقدمه؟</h2>
-    <p class="sub">كل خدمة بتغطي جزء من شغل السيرفر، وتقدر تجمع أكتر من واحدة.</p>
-    <div class="grid">
-      <div class="card"><div class="ic">🛡️</div><h3>بوتات حماية وإدارة</h3><p>حظر تلقائي للسبام والروابط، سجل أحداث، ورتب تلقائية للأعضاء الجدد.</p></div>
-      <div class="card"><div class="ic">🎫</div><h3>نظام تذاكر</h3><p>أعضاؤك يفتحوا تذكرة دعم بضغطة زر، والفريق يستلمها ويقفلها وتتحفظ نسخة منها.</p></div>
-      <div class="card"><div class="ic">🎵</div><h3>بوتات موسيقى</h3><p>تشغيل من يوتيوب وسبوتيفاي، قائمة انتظار، وتحكم كامل بالأوامر أو الأزرار.</p></div>
-      <div class="card"><div class="ic">⚙️</div><h3>بوت مخصص</h3><p>عندك فكرة؟ نبرمج بوت بمزايا خاصة بسيرفرك، اقتصاد، مستويات، ألعاب وغيره.</p></div>
-      <div class="card"><div class="ic">🧰</div><h3>ضبط السيرفر</h3><p>تنظيم القنوات والرتب والصلاحيات وتصميم شكل السيرفر من الصفر.</p></div>
-      <div class="card"><div class="ic">💬</div><h3>دعم فني مستمر</h3><p>صيانة وتحديثات وإصلاح أعطال البوت، وحد يرد عليك بسرعة.</p></div>
-    </div>
+    <h2 id="servicesTitle"></h2>
+    <p class="sub" id="servicesSub"></p>
+    <div class="grid" id="svcGrid"></div>
   </section>
 
   <section id="pricing">
@@ -261,14 +255,12 @@ textarea.field{min-height:100px;resize:vertical}
 
   <section id="faq">
     <h2>أسئلة شائعة</h2><div style="height:18px"></div>
-    <details><summary>أستلم البوت إزاي؟</summary><p>بنضيفه لسيرفرك بنفسنا، أو نسلمك التوكن والملفات لو الاستضافة عندك.</p></details>
-    <details><summary>مدة التسليم قد إيه؟</summary><p>البوتات الجاهزة في نفس اليوم، والمخصصة من يومين لأسبوع حسب التعقيد.</p></details>
-    <details><summary>لو البوت وقف أو فيه مشكلة؟</summary><p>باقة الدعم الفني بتغطي الإصلاح والتحديث، وبنرد عليك في أسرع وقت.</p></details>
+    <div id="faqList"></div>
   </section>
 
   <section id="contact" style="text-align:center">
-    <h2>جاهز نبدأ؟</h2>
-    <p class="sub" style="margin:0 auto 24px">ادخل سيرفر الدعم وقولنا إنت محتاج إيه.</p>
+    <h2 id="contactTitle">جاهز نبدأ؟</h2>
+    <p class="sub" id="contactText" style="margin:0 auto 24px">ادخل سيرفر الدعم وقولنا إنت محتاج إيه.</p>
     <a class="btn main" data-discord target="_blank" rel="noopener" href="#">ادخل سيرفر ديسكورد</a>
   </section>
 </main>
@@ -281,7 +273,7 @@ textarea.field{min-height:100px;resize:vertical}
   </section>
 </main>
 
-<footer>© <span id="yr"></span> BOTAURA، بوتات ديسكورد</footer>
+<footer>© <span id="yr"></span> <span id="brandFoot">BOTAURA</span>، بوتات ديسكورد</footer>
 <button class="fab" id="chatFab" aria-label="تواصل مع الإدارة">💬<i id="chatDot" hidden></i></button>
 <div class="chatbox" id="chatBox" hidden>
   <div class="chat-h"><b>تواصل مع الإدارة</b><button id="chatClose" class="x" aria-label="إغلاق">✕</button></div>
@@ -291,30 +283,12 @@ textarea.field{min-height:100px;resize:vertical}
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 <div class="toast" id="toast">تم النسخ</div>
 
-<script>
-/* ===== الإعدادات: عدّل هنا ===== */
-const DISCORD_INVITE = "https://discord.gg/PUT_YOUR_INVITE";   // حط رابط سيرفرك
-const COUNTER_NS = "botaura-barq05";                            // اسم العداد (غيّره لو حبيت)
-
-document.getElementById('yr').textContent = new Date().getFullYear();
-document.querySelectorAll('[data-discord]').forEach(a => { a.href = DISCORD_INVITE; a.target = '_blank'; a.rel = 'noopener'; });
-
-const ar = n => Number(n).toLocaleString('ar-EG');
-
-/* عدّاد أرقام متحرك */
-document.querySelectorAll('[data-count]').forEach(el=>{
-  const to = +el.dataset.count; let n = 0;
-  const io = new IntersectionObserver(([e])=>{ if(!e.isIntersecting) return; io.disconnect();
-    const t = setInterval(()=>{ n += Math.ceil(to/40); if(n>=to){n=to;clearInterval(t)} el.textContent = ar(n)+'+'; },30);
-  }); io.observe(el);
-});
-
-</script>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ===== الصق إعدادات Firebase هنا ===== */
 const firebaseConfig = {
@@ -325,15 +299,16 @@ const firebaseConfig = {
   messagingSenderId: "776275159117",
   appId: "1:776275159117:web:8d1691ff05918661b01404"
 };
-const OWNER_EMAIL = "barqelhadidy@gmail.com";
+const FOUNDER_EMAIL = "barqelhadidy@gmail.com";
 /* ================================== */
 
 const ok = !firebaseConfig.apiKey.startsWith("PASTE");
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num = n => Number(n).toLocaleString("ar-EG");
-const RANK = {buyer:0, support:1, admin:2, owner:3};
-const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر"};
+const RANK = {buyer:0, support:1, admin:2, owner:3, founder:4};
+const assignable = () => role === "founder" ? ["buyer","support","admin","owner"] : role === "owner" ? ["buyer","support","admin"] : ["buyer","support"];
+const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر", founder:"👑 المالك"};
 const ORDER_AR = {pending:"قيد المراجعة", paid:"تم الدفع", done:"تم التسليم", cancelled:"ملغي"};
 const listE = s => s.docs.map(d => ({id:d.id, ...d.data({serverTimestamps:"estimate"})}));
 const hm = t => { const v = t?.toMillis?.() ?? t ?? 0; return v ? new Date(v).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}) : ""; };
@@ -348,10 +323,33 @@ const DEF_PRODUCTS = [
   {id:"d3", name:"دعم فني شهري", desc:"صيانة وتحديث البوت ومساعدة في ضبط السيرفر.", price:100}
 ];
 const DEF_PAY = [
-  {name:"فودافون كاش", details:"الأونر لسه ما ضافش الرقم"},
-  {name:"إنستاباي", details:"الأونر لسه ما ضافش العنوان"}
+  {name:"فودافون كاش", details:"لسه ما اتضافش"},
+  {name:"إنستاباي", details:"لسه ما اتضافش"}
 ];
 
+const DEF_SITE = {
+  brandName:"BOTAURA",
+  heroTitle:"بوتات ديسكورد تخلّي سيرفرك يشتغل لوحده", heroHighlight:"سيرفرك",
+  heroText:"بنصمم ونبيع بوتات جاهزة ومخصصة، ونتابع سيرفرك بدعم فني سريع. تختار الباقة، ونسلّمك البوت شغّال.",
+  discord:"https://discord.gg/PUT_YOUR_INVITE",
+  botsCount:120, serversCount:85,
+  servicesTitle:"إيه اللي بنقدمه؟", servicesSub:"كل خدمة بتغطي جزء من شغل السيرفر، وتقدر تجمع أكتر من واحدة.",
+  services:[
+    {icon:"🛡️", title:"بوتات حماية وإدارة", text:"حظر تلقائي للسبام والروابط، سجل أحداث، ورتب تلقائية للأعضاء الجدد."},
+    {icon:"🎫", title:"نظام تذاكر", text:"أعضاؤك يفتحوا تذكرة دعم بضغطة زر، والفريق يستلمها ويقفلها وتتحفظ نسخة منها."},
+    {icon:"🎵", title:"بوتات موسيقى", text:"تشغيل من يوتيوب وسبوتيفاي، قائمة انتظار، وتحكم كامل بالأوامر أو الأزرار."},
+    {icon:"⚙️", title:"بوت مخصص", text:"عندك فكرة؟ نبرمج بوت بمزايا خاصة بسيرفرك، اقتصاد، مستويات، ألعاب وغيره."},
+    {icon:"🧰", title:"ضبط السيرفر", text:"تنظيم القنوات والرتب والصلاحيات وتصميم شكل السيرفر من الصفر."},
+    {icon:"💬", title:"دعم فني مستمر", text:"صيانة وتحديثات وإصلاح أعطال البوت، وحد يرد عليك بسرعة."}
+  ],
+  faq:[
+    {q:"أستلم البوت إزاي؟", a:"بنضيفه لسيرفرك بنفسنا، أو نسلمك التوكن والملفات لو الاستضافة عندك."},
+    {q:"مدة التسليم قد إيه؟", a:"البوتات الجاهزة في نفس اليوم، والمخصصة من يومين لأسبوع حسب التعقيد."},
+    {q:"لو البوت وقف أو فيه مشكلة؟", a:"باقة الدعم الفني بتغطي الإصلاح والتحديث، وبنرد عليك في أسرع وقت."}
+  ],
+  contactTitle:"جاهز نبدأ؟", contactText:"ادخل سيرفر الدعم وقولنا إنت محتاج إيه."
+};
+let site = DEF_SITE, siteEdit = null;
 let auth, db, user = null, role = "buyer", unsubs = [];
 let products = [], pay = DEF_PAY, payEdit = [];
 let myTickets = [], myOrders = [], staffTickets = [], orders = [], usersList = [], curTab = "tickets";
@@ -385,7 +383,7 @@ function renderPayments() {
   $("payList").innerHTML = pay.map(m => `<div class="card"><div class="ic">💳</div><h3>${esc(m.name)}</h3><p style="direction:ltr;text-align:right">${esc(m.details)}</p></div>`).join("");
 }
 function ticketHTML(t, staff) {
-  return `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(t.subject)}</b><span class="badge ${t.status==="open"?"":"closed"}">${t.type==="report"?"بلاغ":"دعم"} · ${t.status==="open"?"مفتوحة":"مغلقة"}</span></div>${staff?`<small class="note">${esc(t.name)} · ${esc(t.email)}</small>`:""}<p style="margin:8px 0">${esc(t.message)}</p>${(t.replies||[]).map(r=>`<div class="reply ${r.staff?"staff":""}"><small>${esc(r.name)} (${ROLE_AR[r.role]||""})</small><div>${esc(r.text)}</div></div>`).join("")}<div class="row"><input class="field" style="flex:1;margin:0" data-rt="${t.id}" placeholder="اكتب رد"><button class="btn main sm" data-reply="${t.id}">رد</button>${staff?`<button class="btn ghost sm" data-toggle="${t.id}">${t.status==="open"?"إغلاق":"إعادة فتح"}</button>`:""}</div></div>`;
+  return `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(t.subject)}</b><span class="badge ${t.status==="open"?"":"closed"}">${t.type==="report"?"بلاغ":"دعم"} · ${t.status==="open"?"مفتوحة":"مغلقة"}</span></div>${staff?`<small class="note">${esc(t.name)} · ${esc(t.email)}</small>`:""}<p style="margin:8px 0">${esc(t.message)}</p>${(t.replies||[]).map(r=>`<div class="reply ${r.staff?"staff":""}"><small>${esc(r.name)} (${ROLE_AR[r.role]||""})</small><div>${esc(r.text)}</div></div>`).join("")}<div class="row"><input class="field" style="flex:1;margin:0" data-rt="${t.id}" placeholder="اكتب رد"><button class="btn main sm" data-reply="${t.id}">رد</button>${staff?`<button class="btn ghost sm" data-toggle="${t.id}">${t.status==="open"?"إغلاق":"إعادة فتح"}</button>`:""}${staff&&RANK[role]>=4?`<button class="btn red sm" data-delt="${t.id}">حذف</button>`:""}</div></div>`;
 }
 const byNew = (a, b) => ms(b.createdAt) - ms(a.createdAt);
 function renderSupport() {
@@ -395,7 +393,7 @@ function renderSupport() {
 }
 
 /* ---------- لوحة التحكم ---------- */
-const TABS = [["tickets","استقبال التذاكر",1],["orders","استقبال الطلبات",2],["chat","شات الإدارة",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["perms","الصلاحيات",2]];
+const TABS = [["tickets","استقبال التذاكر",1],["orders","استقبال الطلبات",2],["chat","شات الإدارة",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["perms","الصلاحيات",2],["site","إعدادات الموقع",4]];
 const counts = () => ({
   tickets: staffTickets.filter(x => x.status === "open").length,
   orders: orders.filter(x => x.status === "pending").length,
@@ -416,7 +414,7 @@ function renderPanel(force) {
 function renderTab(force) {
   const el = $("tabBody");
   if (!force && el.contains(document.activeElement) && document.activeElement.value) return;
-  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, chat:tabChat, products:tabProducts, payments:tabPayments, perms:tabPerms}[curTab])();
+  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, chat:tabChat, products:tabProducts, payments:tabPayments, perms:tabPerms, site:tabSite}[curTab])();
   if (curTab === "chat") updateStaffChat();
 }
 const empty = '<p class="note">مفيش حاجة لسه.</p>';
@@ -427,11 +425,11 @@ function tabOrders() {
   const cnt = s => s === "all" ? orders.length : orders.filter(o => o.status === s).length;
   const chips = ["all","pending","paid","done","cancelled"].map(s => `<button class="chip ${orderFilter===s?"on":""}" data-of="${s}">${s==="all"?"الكل":ORDER_AR[s]} (${num(cnt(s))})</button>`).join("");
   const list = orders.filter(o => orderFilter === "all" || o.status === orderFilter).sort(byNew);
-  return `<div class="tabs">${chips}</div>` + (list.map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small></div>`).join("") || empty);
+  return `<div class="tabs">${chips}</div>` + (list.map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small></div>`).join("") || empty);
 }
 const msgHTML = (m, mine) => `<div class="msg ${mine?"me":"them"}"><small>${esc(m.name||"")}${m.staff?" · إدارة":""}</small>${esc(m.text)}<time>${hm(m.createdAt)}</time></div>`;
 function tabChat() {
-  return `<div class="chatgrid"><div id="chList"></div><div><div id="thr" class="chat-b"></div><div class="row"><input class="field" id="stIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رد"><button class="btn main sm" id="stSend">إرسال</button></div></div></div>`;
+  return `<div class="chatgrid"><div id="chList"></div><div><div id="thr" class="chat-b"></div><div class="row"><input class="field" id="stIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رد"><button class="btn main sm" id="stSend">إرسال</button>${RANK[role]>=4?'<button class="btn red sm" id="delChat">حذف المحادثة</button>':""}</div></div></div>`;
 }
 function updateStaffChat() {
   const l = $("chList"); if (!l) return;
@@ -448,7 +446,7 @@ function openStaffChat(id) {
   updateStaffChat();
 }
 function tabPerms() {
-  const opts = role === "owner" ? ["buyer","support","admin"] : ["buyer","support"];
+  const opts = assignable();
   const known = new Set(usersList.map(u => (u.email || "").toLowerCase()));
   const pending = grants.filter(g => !known.has(g.id));
   const form = `<div class="item"><b>إعطاء صلاحية لشخص</b><p class="note" style="margin:4px 0 12px">اكتب جيميل الشخص واختار صلاحيته. لو ما سجّلش دخول لسه، الصلاحية بتتفعّل أول ما يسجّل.${role==="admin"?" الأدمن يقدر يعيّن مشتري أو دعم فني فقط.":""}</p><div class="row"><input class="field" id="pmEmail" type="email" dir="ltr" placeholder="name@gmail.com" style="flex:2;margin:0"><select class="field" id="pmRole" style="flex:1;margin:0">${opts.map(r=>`<option value="${r}">${ROLE_AR[r]}</option>`).join("")}</select><button class="btn main" id="assignBtn">تعيين</button></div></div>`;
@@ -456,17 +454,53 @@ function tabPerms() {
     const can = u.id !== user.uid && opts.includes(u.role);
     return `<div class="item row" style="justify-content:space-between"><div><b>${esc(u.name||"بدون اسم")}</b><br><small class="note">${esc(u.email)}</small></div>${can?`<select class="field" style="width:auto;margin:0" data-role="${u.id}">${opts.map(r=>`<option value="${r}" ${u.role===r?"selected":""}>${ROLE_AR[r]}</option>`).join("")}</select>`:`<span class="badge ${u.role}">${ROLE_AR[u.role]||u.role}</span>`}</div>`;
   }).join("") || empty;
-  const wait = pending.length ? `<h3 style="margin:18px 0 10px">صلاحيات معلّقة (لسه ما سجّلوش دخول)</h3>` + pending.map(g => `<div class="item row" style="justify-content:space-between"><div dir="ltr">${esc(g.id)}</div><div class="row"><span class="badge ${g.role}">${ROLE_AR[g.role]||g.role}</span>${role==="owner"?`<button class="btn red sm" data-delgrant="${esc(g.id)}">حذف</button>`:""}</div></div>`).join("") : "";
+  const wait = pending.length ? `<h3 style="margin:18px 0 10px">صلاحيات معلّقة (لسه ما سجّلوش دخول)</h3>` + pending.map(g => `<div class="item row" style="justify-content:space-between"><div dir="ltr">${esc(g.id)}</div><div class="row"><span class="badge ${g.role}">${ROLE_AR[g.role]||g.role}</span>${RANK[role]>=3?`<button class="btn red sm" data-delgrant="${esc(g.id)}">حذف</button>`:""}</div></div>`).join("") : "";
   return form + `<h3 style="margin:18px 0 10px">الأعضاء</h3>` + members + wait;
+}
+function tabSite() {
+  if (!siteEdit) siteEdit = JSON.parse(JSON.stringify(site));
+  const s = siteEdit;
+  const f = (k, label, o = {}) => `<label class="note">${label}</label>` + (o.area ? `<textarea class="field" data-sk="${k}">${esc(s[k])}</textarea>` : `<input class="field" data-sk="${k}" type="${o.type||"text"}" value="${esc(s[k])}"${o.ltr?' dir="ltr"':""}>`);
+  const svc = s.services.map((v, i) => `<div class="item"><div class="row"><input class="field" style="width:70px;margin:0;text-align:center" data-sa="services" data-si="${i}" data-sf="icon" value="${esc(v.icon)}" placeholder="🙂"><input class="field" style="flex:1;margin:0" data-sa="services" data-si="${i}" data-sf="title" value="${esc(v.title)}" placeholder="اسم الخدمة"><button class="btn red sm" data-dela="services:${i}">حذف</button></div><textarea class="field" style="margin:8px 0 0" data-sa="services" data-si="${i}" data-sf="text" placeholder="وصف الخدمة">${esc(v.text)}</textarea></div>`).join("");
+  const faq = s.faq.map((v, i) => `<div class="item"><div class="row"><input class="field" style="flex:1;margin:0" data-sa="faq" data-si="${i}" data-sf="q" value="${esc(v.q)}" placeholder="السؤال"><button class="btn red sm" data-dela="faq:${i}">حذف</button></div><textarea class="field" style="margin:8px 0 0" data-sa="faq" data-si="${i}" data-sf="a" placeholder="الإجابة">${esc(v.a)}</textarea></div>`).join("");
+  return `<p class="note" style="margin-top:0">أي تعديل هنا بيظهر في الموقع بعد ما تضغط "حفظ الموقع".</p>`
+   + `<div class="item"><b>الصفحة الرئيسية</b>` + f("brandName","اسم الموقع") + f("heroTitle","العنوان الرئيسي") + f("heroHighlight","الكلمة الملوّنة داخل العنوان (اختياري)") + f("heroText","النص تحت العنوان",{area:1}) + f("discord","رابط سيرفر ديسكورد",{ltr:1}) + `<div class="row"><div style="flex:1">${f("botsCount","عدد البوتات المسلّمة",{type:"number"})}</div><div style="flex:1">${f("serversCount","عدد السيرفرات",{type:"number"})}</div></div></div>`
+   + `<div class="item"><b>الخدمات</b>` + f("servicesTitle","عنوان القسم") + f("servicesSub","وصف القسم") + `<div style="height:8px"></div>` + svc + `<button class="btn ghost sm" data-adda="services">+ إضافة خدمة</button></div>`
+   + `<div class="item"><b>الأسئلة الشائعة</b><div style="height:8px"></div>` + faq + `<button class="btn ghost sm" data-adda="faq">+ إضافة سؤال</button></div>`
+   + `<div class="item"><b>قسم التواصل</b>` + f("contactTitle","العنوان") + f("contactText","النص") + `</div>`
+   + `<div class="row"><button class="btn main" id="saveSite">حفظ الموقع</button><button class="btn ghost" id="resetSite">رجوع للافتراضي</button><button class="btn red" id="resetVisits">تصفير عداد الزيارات</button></div>`;
 }
 function tabProducts() {
   return `<div class="row"><input class="field" id="pName" placeholder="اسم المنتج" style="flex:2"><input class="field" id="pPrice" type="number" min="0" placeholder="السعر بالجنيه" style="flex:1"></div><textarea class="field" id="pDesc" placeholder="وصف المنتج"></textarea><label class="note"><input type="checkbox" id="pHot"> علامة "الأكثر طلباً"</label><br><br><button class="btn main" id="addProduct">إضافة المنتج</button><hr style="border:0;border-top:1px solid var(--line);margin:22px 0">` +
-  (products.map(p=>`<div class="item row" style="justify-content:space-between"><div><b>${esc(p.name)}</b> · ${num(p.price)} ج.م</div><button class="btn red sm" data-delp="${p.id}">حذف</button></div>`).join("") || '<p class="note">مفيش منتجات مضافة، الموقع بيعرض منتجات تجريبية لحد ما تضيف.</p>');
+  (products.map(p=>`<div class="item" data-pid="${p.id}"><div class="row"><input class="field" style="flex:2;margin:0" data-pf="name" value="${esc(p.name)}"><input class="field" style="flex:1;margin:0" data-pf="price" type="number" min="0" value="${esc(p.price)}"><label class="note"><input type="checkbox" data-pf="hot" ${p.hot?"checked":""}> الأكثر طلباً</label></div><textarea class="field" data-pf="desc" style="margin:8px 0">${esc(p.desc)}</textarea><div class="row"><button class="btn main sm" data-savep="${p.id}">حفظ</button><button class="btn red sm" data-delp="${p.id}">حذف</button></div></div>`).join("") || '<p class="note">مفيش منتجات مضافة، الموقع بيعرض منتجات تجريبية لحد ما تضيف.</p>');
 }
 function tabPayments() {
   return payEdit.map((m,i)=>`<div class="row"><input class="field" style="flex:1" data-pi="${i}" data-f="name" value="${esc(m.name)}" placeholder="الاسم (مثلاً فودافون كاش)"><input class="field" style="flex:2" data-pi="${i}" data-f="details" value="${esc(m.details)}" placeholder="الرقم أو التفاصيل"><button class="btn red sm" data-delpay="${i}" style="margin-bottom:10px">حذف</button></div>`).join("") + `<div class="row"><button class="btn ghost" id="addPay">إضافة طريقة</button><button class="btn main" id="savePay">حفظ</button></div>`;
 }
-function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderChatUI(); }
+function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderChatUI(); renderSite(); }
+
+/* ---------- محتوى الموقع (قابل للتعديل من المالك) ---------- */
+function countTo(el, to) {
+  to = Number(to) || 0;
+  if (el.dataset.v === String(to)) return;
+  el.dataset.v = String(to);
+  const t0 = performance.now();
+  const step = t => { const k = Math.min(1, (t - t0) / 900); el.textContent = num(Math.round(to * k)) + (k === 1 && to ? "+" : ""); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function renderSite() {
+  const s = site, t = esc(s.heroTitle), hl = esc(s.heroHighlight || "");
+  $("brandName").textContent = s.brandName; $("brandFoot").textContent = s.brandName;
+  document.title = s.brandName + " | بوتات ديسكورد ودعم فني";
+  $("heroTitle").innerHTML = hl && t.includes(hl) ? t.replace(hl, m => `<span>${m}</span>`) : t;
+  $("heroText").textContent = s.heroText;
+  document.querySelectorAll("[data-discord]").forEach(a => { a.href = s.discord || "#"; a.target = "_blank"; a.rel = "noopener"; });
+  countTo($("statBots"), s.botsCount); countTo($("statServers"), s.serversCount);
+  $("servicesTitle").textContent = s.servicesTitle; $("servicesSub").textContent = s.servicesSub;
+  $("svcGrid").innerHTML = s.services.map(v => `<div class="card"><div class="ic">${esc(v.icon)}</div><h3>${esc(v.title)}</h3><p>${esc(v.text)}</p></div>`).join("");
+  $("faqList").innerHTML = s.faq.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("");
+  $("contactTitle").textContent = s.contactTitle; $("contactText").textContent = s.contactText;
+}
 
 /* ---------- الشات ---------- */
 function renderChatUI() {
@@ -497,13 +531,27 @@ async function sendChat(inp, target) {
   await setDoc(doc(db,"chats",uid), meta, {merge:true});
 }
 
+async function saveSite() {
+  const s = siteEdit;
+  const out = {...s, botsCount:Number(s.botsCount)||0, serversCount:Number(s.serversCount)||0,
+    services:s.services.filter(v => v.title.trim()).map(v => ({icon:v.icon.trim()||"✨", title:v.title.trim(), text:v.text.trim()})),
+    faq:s.faq.filter(v => v.q.trim()).map(v => ({q:v.q.trim(), a:v.a.trim()}))};
+  for (const k of ["brandName","heroTitle","heroHighlight","heroText","discord","servicesTitle","servicesSub","contactTitle","contactText"]) out[k] = String(out[k] ?? "").trim();
+  if (!out.brandName || !out.heroTitle) return say("اسم الموقع والعنوان الرئيسي مطلوبين");
+  if (out.discord && !/^https?:\/\//.test(out.discord)) return say("رابط ديسكورد لازم يبدأ بـ https://");
+  await setDoc(doc(db,"settings","site"), out);
+  siteEdit = JSON.parse(JSON.stringify({...DEF_SITE, ...out}));
+  say("تم حفظ الموقع"); renderTab(true);
+}
+
 /* ---------- تعيين صلاحية بالإيميل ---------- */
 async function assignRole() {
   const email = $("pmEmail").value.trim().toLowerCase(), r = $("pmRole").value;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say("اكتب إيميل صحيح");
-  if (email === OWNER_EMAIL) return say("ده إيميل الأونر");
+  if (email === FOUNDER_EMAIL) return say("ده إيميل المالك");
+  if (!assignable().includes(r)) return say("مش مسموح لك تعيّن الصلاحية دي");
   const u = usersList.find(x => (x.email || "").toLowerCase() === email);
-  if (u && (u.id === user.uid || !(role === "owner" ? ["buyer","support","admin"] : ["buyer","support"]).includes(u.role))) return say("مش مسموح لك تغيّر صلاحية الشخص ده");
+  if (u && (u.id === user.uid || !assignable().includes(u.role))) return say("مش مسموح لك تغيّر صلاحية الشخص ده");
   await setDoc(doc(db,"grants",email), {role:r, by:user.email, updatedAt:serverTimestamp()});
   if (u) await updateDoc(doc(db,"users",u.id), {role:r});
   $("pmEmail").value = ""; say("تم تعيين الصلاحية: " + ROLE_AR[r]);
@@ -544,12 +592,32 @@ document.addEventListener("click", e => {
   if (q("#chatSend")) return run(() => sendChat($("chatIn")));
   if (q("#stSend")) return run(() => sendChat($("stIn"), curChat));
   if (q("#assignBtn")) return run(assignRole);
+  if (q("#saveSite")) return run(saveSite);
+  if (q("#resetSite")) return confirm("ترجّع كل نصوص الموقع للافتراضي؟") && run(async () => { await deleteDoc(doc(db,"settings","site")); siteEdit = null; say("تم الرجوع للافتراضي"); renderTab(true); });
+  if (q("#resetVisits")) return confirm("تصفّر عداد الزيارات؟") && run(async () => { await setDoc(doc(db,"stats","visits"), {count:0}); say("تم التصفير"); });
+  if (q("#delChat")) return curChat && confirm("تحذف المحادثة كلها؟") && run(async () => {
+    const id = curChat, s = await getDocs(collection(db,"chats",id,"messages"));
+    await Promise.all(s.docs.map(d => deleteDoc(d.ref)));
+    await deleteDoc(doc(db,"chats",id));
+    chatUnsub && chatUnsub(); chatUnsub = null; curChat = null; staffMsgs = []; updateStaffChat();
+  });
   let b;
   if ((b = q("[data-chat]"))) return openStaffChat(b.dataset.chat);
+  if ((b = q("[data-delt]"))) return confirm("تحذف التذكرة نهائياً؟") && run(() => deleteDoc(doc(db,"tickets",b.dataset.delt)));
+  if ((b = q("[data-delo]"))) return confirm("تحذف الطلب نهائياً؟") && run(() => deleteDoc(doc(db,"orders",b.dataset.delo)));
+  if ((b = q("[data-savep]"))) return run(async () => {
+    const row = b.closest("[data-pid]"), g = k => row.querySelector(`[data-pf="${k}"]`);
+    const name = g("name").value.trim(), price = Number(g("price").value);
+    if (!name || !(price >= 0) || g("price").value === "") return say("اكتب الاسم والسعر");
+    await updateDoc(doc(db,"products",b.dataset.savep), {name, price, desc:g("desc").value.trim(), hot:g("hot").checked});
+    say("تم حفظ المنتج");
+  });
+  if ((b = q("[data-adda]"))) { siteEdit[b.dataset.adda].push(b.dataset.adda === "faq" ? {q:"", a:""} : {icon:"✨", title:"", text:""}); return renderTab(true); }
+  if ((b = q("[data-dela]"))) { const [n, i] = b.dataset.dela.split(":"); siteEdit[n].splice(+i, 1); return renderTab(true); }
   if ((b = q("[data-of]"))) { orderFilter = b.dataset.of; return renderTab(true); }
   if ((b = q("[data-delgrant]"))) return confirm("تحذف الصلاحية المعلّقة؟") && run(() => deleteDoc(doc(db,"grants",b.dataset.delgrant)));
   if ((b = q("[data-buy]"))) { const p = curProducts().find(x => String(x.id) === b.dataset.buy); return p && openBuy(p); }
-  if ((b = q("[data-tab]"))) { curTab = b.dataset.tab; if (curTab === "payments") payEdit = pay.map(x=>({...x})); return renderPanel(true); }
+  if ((b = q("[data-tab]"))) { curTab = b.dataset.tab; if (curTab === "payments") payEdit = pay.map(x=>({...x})); if (curTab === "site") siteEdit = JSON.parse(JSON.stringify(site)); return renderPanel(true); }
   if ((b = q("[data-reply]"))) return run(async () => {
     const id = b.dataset.reply, inp = document.querySelector(`[data-rt="${id}"]`), text = inp.value.trim();
     if (!text) return;
@@ -586,8 +654,10 @@ document.addEventListener("change", e => {
   if (t.dataset.role) run(() => updateDoc(doc(db,"users",t.dataset.role), {role:t.value}).then(()=>say("تم تغيير الرتبة")));
 });
 document.addEventListener("input", e => {
-  const t = e.target;
-  if (t.dataset.pi !== undefined) payEdit[+t.dataset.pi][t.dataset.f] = t.value;
+  const t = e.target, d = t.dataset;
+  if (d.pi !== undefined) payEdit[+d.pi][d.f] = t.value;
+  if (d.sk !== undefined && siteEdit) siteEdit[d.sk] = t.value;
+  if (d.sa !== undefined && siteEdit) siteEdit[d.sa][+d.si][d.sf] = t.value;
 });
 
 document.addEventListener("keydown", e => {
@@ -603,6 +673,7 @@ if (ok) {
   const list = s => s.docs.map(d => ({id:d.id, ...d.data()}));
 
   onSnapshot(collection(db,"products"), s => { products = list(s); renderProducts(); if (curTab==="products") renderTab(); });
+  onSnapshot(doc(db,"settings","site"), s => { site = s.exists() ? {...DEF_SITE, ...s.data()} : DEF_SITE; renderSite(); }, e => console.warn(e.code));
   onSnapshot(doc(db,"settings","payments"), s => { pay = (s.exists() && s.data().methods?.length) ? s.data().methods : DEF_PAY; renderPayments(); });
 
   try { if (localStorage.getItem("ba_seen") !== "1")
@@ -614,15 +685,15 @@ if (ok) {
     user = u; role = "buyer"; myTickets = myOrders = staffTickets = orders = usersList = grants = chatList = chatMsgs = staffMsgs = [];
     if (u) {
       try {
-        const isOwner = u.email === OWNER_EMAIL, ref = doc(db,"users",u.uid), snap = await getDoc(ref);
+        const isOwner = u.email === FOUNDER_EMAIL, ref = doc(db,"users",u.uid), snap = await getDoc(ref);
         if (!snap.exists()) {
           role = "buyer";
-          if (isOwner) role = "owner";
+          if (isOwner) role = "founder";
           else { try { const g = await getDoc(doc(db,"grants",u.email.toLowerCase())); if (g.exists() && g.data().role in RANK) role = g.data().role; } catch (_) {} }
           await setDoc(ref, {email:u.email, name:u.displayName||"", photo:u.photoURL||"", role, createdAt:serverTimestamp()});
         } else {
           role = snap.data().role || "buyer";
-          if (isOwner && role !== "owner") { await updateDoc(ref, {role:"owner"}); role = "owner"; }
+          if (isOwner && role !== "founder") { await updateDoc(ref, {role:"founder"}); role = "founder"; }
         }
       } catch (e) { say("تأكد إنك نشرت قواعد Firestore (Rules): " + e.code); }
       const r = RANK[role];
