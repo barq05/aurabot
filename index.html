@@ -134,6 +134,30 @@ textarea.field{min-height:100px;resize:vertical}
 .price p.d{flex:1;color:var(--mute);font-size:.95rem;margin:6px 0 18px}
 #adminLink{color:var(--pink);font-weight:600}
 @media(max-width:760px){.links{display:flex!important;gap:0}.links a:not(#adminLink){display:none}}
+.fab{position:fixed;bottom:22px;inset-inline-end:22px;width:58px;height:58px;border-radius:50%;border:0;font-size:1.5rem;cursor:pointer;background:linear-gradient(135deg,var(--violet),var(--pink));box-shadow:0 8px 28px #7c3aed88;z-index:35;transition:transform .2s}
+.fab:hover{transform:scale(1.08)}
+.fab i,.dot{background:#f43f5e}
+.fab i{position:absolute;top:3px;inset-inline-end:3px;width:14px;height:14px;border-radius:50%;border:2px solid var(--bg)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-start:8px}
+.chatbox{position:fixed;bottom:92px;inset-inline-end:22px;width:min(360px,calc(100vw - 32px));height:460px;max-height:calc(100vh - 120px);z-index:35;background:#1d0a52;border:1px solid var(--pink);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px #000a}
+.chat-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(135deg,var(--violet),#a21caf)}
+.chat-h .x{background:none;border:0;color:#fff;font-size:1.1rem;cursor:pointer}
+.chat-b{display:flex;flex-direction:column;overflow-y:auto;padding:12px;background:#150538;border-radius:14px}
+.chatbox .chat-b{flex:1;border-radius:0}
+.chat-f{display:flex;gap:8px;padding:10px;align-items:center}
+.chat-f .field{margin:0;flex:1}
+.msg{max-width:82%;padding:8px 12px;border-radius:14px;margin:4px 0;font-size:.92rem;word-break:break-word;white-space:pre-wrap}
+.msg small{display:block;opacity:.7;font-size:.72rem}
+.msg time{display:block;opacity:.6;font-size:.7rem;margin-top:2px}
+.msg.me{align-self:flex-start;background:var(--violet)}
+.msg.them{align-self:flex-end;background:#2a1170;border:1px solid var(--line)}
+.chatgrid{display:grid;grid-template-columns:240px 1fr;gap:14px}
+#chList{max-height:420px;overflow:auto}
+.citem{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.citem.on{border-color:var(--pink)}
+.citem small{display:block;color:var(--mute);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.chatgrid .chat-b{height:340px;margin-bottom:10px}
+@media(max-width:700px){.chatgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -254,29 +278,16 @@ textarea.field{min-height:100px;resize:vertical}
     <h2>الإدارة</h2><div style="height:16px"></div>
     <div class="tabs" id="tabs"></div>
     <div class="panel" id="tabBody"></div>
-    <div id="calcBox" hidden>
-      <p class="sub">اختار الصلاحيات اللي البوت محتاجها وهنطلعلك رابط الدعوة جاهز. اعطي البوت اللي يحتاجه بس.</p>
-      <div class="perm">
-      <div class="panel">
-        <div class="presets" id="presets"></div>
-        <div class="plist" id="plist"></div>
-      </div>
-      <div class="panel out">
-        <small style="color:var(--mute)">رقم الصلاحيات</small>
-        <div class="num" id="pnum">0</div>
-        <label for="cid">Client ID بتاع البوت</label>
-        <input id="cid" inputmode="numeric" placeholder="123456789012345678">
-        <label for="plink">رابط الدعوة</label>
-        <input id="plink" readonly>
-        <button class="btn main" style="width:100%;margin-top:14px" id="copy">نسخ الرابط</button>
-        <p class="note">الـ Client ID تلاقيه في Discord Developer Portal تحت اسم تطبيقك، في صفحة General Information.</p>
-      </div>
-    </div>
-    </div>
   </section>
 </main>
 
 <footer>© <span id="yr"></span> BOTAURA، بوتات ديسكورد</footer>
+<button class="fab" id="chatFab" aria-label="تواصل مع الإدارة">💬<i id="chatDot" hidden></i></button>
+<div class="chatbox" id="chatBox" hidden>
+  <div class="chat-h"><b>تواصل مع الإدارة</b><button id="chatClose" class="x" aria-label="إغلاق">✕</button></div>
+  <div class="chat-b" id="chatMsgs"></div>
+  <div class="chat-f"><input class="field" id="chatIn" maxlength="1000" placeholder="اكتب رسالتك"><button class="btn main sm" id="chatSend">إرسال</button></div>
+</div>
 <div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
 <div class="toast" id="toast">تم النسخ</div>
 
@@ -298,56 +309,12 @@ document.querySelectorAll('[data-count]').forEach(el=>{
   }); io.observe(el);
 });
 
-/* حاسبة الصلاحيات (BigInt لأن بعض القيم أكبر من 32 bit) */
-const P = [
- ['View Channel',10,'رؤية القنوات'],['Send Messages',11,'إرسال رسائل'],['Embed Links',14,'تضمين روابط'],
- ['Attach Files',15,'إرفاق ملفات'],['Add Reactions',6,'إضافة تفاعلات'],['Read Message History',16,'قراءة سجل الرسائل'],
- ['Use External Emojis',18,'إيموجي خارجي'],['Connect',20,'دخول القنوات الصوتية'],['Speak',21,'التحدث في الصوت'],
- ['Manage Messages',13,'إدارة الرسائل'],['Kick Members',1,'طرد الأعضاء'],['Ban Members',2,'حظر الأعضاء'],
- ['Moderate Members',40,'كتم مؤقت (Timeout)'],['Manage Roles',28,'إدارة الرتب'],['Manage Channels',4,'إدارة القنوات'],
- ['View Audit Log',7,'سجل التدقيق'],['Mention Everyone',17,'منشن للجميع'],['Administrator',3,'مشرف كامل (خطر)']
-];
-const PRE = {
- 'أساسي':['View Channel','Send Messages','Embed Links','Read Message History','Add Reactions'],
- 'موسيقى':['View Channel','Send Messages','Embed Links','Connect','Speak','Add Reactions'],
- 'حماية':['View Channel','Send Messages','Embed Links','Read Message History','Manage Messages','Kick Members','Ban Members','Moderate Members','Manage Roles','View Audit Log'],
- 'مشرف كامل':['Administrator']
-};
-const plist = document.getElementById('plist'), presets = document.getElementById('presets');
-P.forEach(([k,b,l])=>{
-  const lb = document.createElement('label'); if(k==='Administrator') lb.className='danger';
-  lb.innerHTML = `<input type="checkbox" value="${k}" data-b="${b}"><span>${l}</span>`;
-  plist.appendChild(lb);
-});
-const boxes = [...plist.querySelectorAll('input')];
-function calc(){
-  let n = 0n; boxes.forEach(c=>{ if(c.checked) n |= 1n << BigInt(c.dataset.b); });
-  document.getElementById('pnum').textContent = n.toString();
-  const id = document.getElementById('cid').value.replace(/\D/g,'');
-  document.getElementById('plink').value = id
-    ? `https://discord.com/oauth2/authorize?client_id=${id}&permissions=${n}&scope=bot%20applications.commands`
-    : 'اكتب الـ Client ID أولاً';
-}
-Object.entries(PRE).forEach(([name,list])=>{
-  const b = document.createElement('button'); b.className='chip'; b.textContent=name;
-  b.onclick = ()=>{ boxes.forEach(c=>c.checked = list.includes(c.value));
-    presets.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b)); calc(); };
-  presets.appendChild(b);
-});
-boxes.forEach(c=>c.addEventListener('change',()=>{ presets.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); calc(); }));
-document.getElementById('cid').addEventListener('input',calc);
-presets.firstChild.click();
-document.getElementById('copy').onclick = async ()=>{
-  const v = document.getElementById('plink').value; if(!/^https/.test(v)) return;
-  try{ await navigator.clipboard.writeText(v); }catch(e){ document.getElementById('plink').select(); document.execCommand('copy'); }
-  const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
-};
 </script>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,onSnapshot,query,where,serverTimestamp,increment,arrayUnion,orderBy} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ===== الصق إعدادات Firebase هنا ===== */
 const firebaseConfig = {
@@ -368,6 +335,8 @@ const num = n => Number(n).toLocaleString("ar-EG");
 const RANK = {buyer:0, support:1, admin:2, owner:3};
 const ROLE_AR = {buyer:"مشتري", support:"دعم فني", admin:"أدمن", owner:"أونر"};
 const ORDER_AR = {pending:"قيد المراجعة", paid:"تم الدفع", done:"تم التسليم", cancelled:"ملغي"};
+const listE = s => s.docs.map(d => ({id:d.id, ...d.data({serverTimestamps:"estimate"})}));
+const hm = t => { const v = t?.toMillis?.() ?? t ?? 0; return v ? new Date(v).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}) : ""; };
 const ms = t => t?.toMillis?.() ?? t ?? 0;
 const say = m => { const t = $("toast"); t.textContent = m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), 2600); };
 const run = fn => fn().catch(e => { console.error(e); say("ما نفعش: " + (e.code || e.message)); });
@@ -386,6 +355,7 @@ const DEF_PAY = [
 let auth, db, user = null, role = "buyer", unsubs = [];
 let products = [], pay = DEF_PAY, payEdit = [];
 let myTickets = [], myOrders = [], staffTickets = [], orders = [], usersList = [], curTab = "tickets";
+let grants = [], chatList = [], chatMsgs = [], staffMsgs = [], curChat = null, chatUnsub = null, orderFilter = "all";
 
 if (ok) { const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }
 
@@ -425,39 +395,69 @@ function renderSupport() {
 }
 
 /* ---------- لوحة التحكم ---------- */
-const TABS = [["tickets","استقبال التذاكر",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["calc","حاسبة الصلاحيات",1],["orders","الطلبات",2],["users","الرتب",2]];
-function renderPanel() {
+const TABS = [["tickets","استقبال التذاكر",1],["orders","استقبال الطلبات",2],["chat","شات الإدارة",1],["products","إضافة المنتجات",3],["payments","طرق الدفع",3],["perms","الصلاحيات",2]];
+const counts = () => ({
+  tickets: staffTickets.filter(x => x.status === "open").length,
+  orders: orders.filter(x => x.status === "pending").length,
+  chat: chatList.filter(c => c.lastFrom === "user").length
+});
+function renderPanel(force) {
   const r = user ? RANK[role] : -1;
-  const open = staffTickets.filter(x => x.status === "open").length;
+  const c = counts();
+  const total = c.tickets + (r >= 2 ? c.orders : 0) + c.chat;
   $("adminLink").hidden = r < 1;
-  $("adminLink").textContent = "الإدارة" + (open && r >= 1 ? ` (${num(open)})` : "");
+  $("adminLink").textContent = "الإدارة" + (total && r >= 1 ? ` (${num(total)})` : "");
   if (r < 1) { if (!$("adminMain").hidden) showAdmin(false); return; }
   const allowed = TABS.filter(t => r >= t[2]);
   if (!allowed.find(t => t[0] === curTab)) curTab = allowed[0][0];
-  $("tabs").innerHTML = allowed.map(t => `<button class="chip ${t[0]===curTab?"on":""}" data-tab="${t[0]}">${t[1]}${t[0]==="tickets"?` (${staffTickets.filter(x=>x.status==="open").length})`:""}</button>`).join("");
-  renderTab(true);
+  $("tabs").innerHTML = allowed.map(t => `<button class="chip ${t[0]===curTab?"on":""}" data-tab="${t[0]}">${t[1]}${c[t[0]]?` (${num(c[t[0]])})`:""}</button>`).join("");
+  renderTab(force);
 }
 function renderTab(force) {
-  const el = $("tabBody"), calc = curTab === "calc";
-  $("calcBox").hidden = !calc; el.hidden = calc;
-  if (calc) return;
+  const el = $("tabBody");
   if (!force && el.contains(document.activeElement) && document.activeElement.value) return;
-  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, users:tabUsers, products:tabProducts, payments:tabPayments}[curTab])();
+  el.innerHTML = ({tickets:tabTickets, orders:tabOrders, chat:tabChat, products:tabProducts, payments:tabPayments, perms:tabPerms}[curTab])();
+  if (curTab === "chat") updateStaffChat();
 }
 const empty = '<p class="note">مفيش حاجة لسه.</p>';
 function tabTickets() {
   return [...staffTickets].sort((a,b)=>(a.status===b.status?0:a.status==="open"?-1:1)||byNew(a,b)).map(t=>ticketHTML(t,true)).join("") || empty;
 }
 function tabOrders() {
-  return [...orders].sort(byNew).map(o=>`<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}</small></div>`).join("") || empty;
+  const cnt = s => s === "all" ? orders.length : orders.filter(o => o.status === s).length;
+  const chips = ["all","pending","paid","done","cancelled"].map(s => `<button class="chip ${orderFilter===s?"on":""}" data-of="${s}">${s==="all"?"الكل":ORDER_AR[s]} (${num(cnt(s))})</button>`).join("");
+  const list = orders.filter(o => orderFilter === "all" || o.status === orderFilter).sort(byNew);
+  return `<div class="tabs">${chips}</div>` + (list.map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small></div>`).join("") || empty);
 }
-function tabUsers() {
+const msgHTML = (m, mine) => `<div class="msg ${mine?"me":"them"}"><small>${esc(m.name||"")}${m.staff?" · إدارة":""}</small>${esc(m.text)}<time>${hm(m.createdAt)}</time></div>`;
+function tabChat() {
+  return `<div class="chatgrid"><div id="chList"></div><div><div id="thr" class="chat-b"></div><div class="row"><input class="field" id="stIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رد"><button class="btn main sm" id="stSend">إرسال</button></div></div></div>`;
+}
+function updateStaffChat() {
+  const l = $("chList"); if (!l) return;
+  const sorted = [...chatList].sort((a, b) => ms(b.lastAt) - ms(a.lastAt));
+  if (!curChat && sorted.length) return openStaffChat(sorted[0].id);
+  l.innerHTML = sorted.map(c => `<div class="citem ${c.id===curChat?"on":""}" data-chat="${esc(c.id)}"><b>${esc(c.name||c.email||"بدون اسم")}</b>${c.lastFrom==="user"?'<i class="dot"></i>':""}<small>${esc(c.lastText)}</small></div>`).join("") || '<p class="note">مفيش محادثات لسه.</p>';
+  const t = $("thr");
+  t.innerHTML = !curChat ? '<p class="note" style="text-align:center">لما حد يبعت رسالة هتظهر هنا.</p>' : (staffMsgs.map(m => msgHTML(m, m.staff)).join("") || '<p class="note" style="text-align:center">مفيش رسائل.</p>');
+  t.scrollTop = t.scrollHeight;
+}
+function openStaffChat(id) {
+  curChat = id; staffMsgs = []; chatUnsub && chatUnsub();
+  chatUnsub = onSnapshot(query(collection(db,"chats",id,"messages"), orderBy("createdAt")), s => { staffMsgs = listE(s); updateStaffChat(); }, e => console.warn(e.code));
+  updateStaffChat();
+}
+function tabPerms() {
   const opts = role === "owner" ? ["buyer","support","admin"] : ["buyer","support"];
-  return `<p class="note" style="margin-top:0">الشخص بيظهر هنا بعد ما يسجّل دخول مرة.${role==="admin"?" الأدمن يقدر يغيّر بين مشتري ودعم فني فقط.":""}</p>` +
-  ([...usersList].sort(byNew).map(u=>{
+  const known = new Set(usersList.map(u => (u.email || "").toLowerCase()));
+  const pending = grants.filter(g => !known.has(g.id));
+  const form = `<div class="item"><b>إعطاء صلاحية لشخص</b><p class="note" style="margin:4px 0 12px">اكتب جيميل الشخص واختار صلاحيته. لو ما سجّلش دخول لسه، الصلاحية بتتفعّل أول ما يسجّل.${role==="admin"?" الأدمن يقدر يعيّن مشتري أو دعم فني فقط.":""}</p><div class="row"><input class="field" id="pmEmail" type="email" dir="ltr" placeholder="name@gmail.com" style="flex:2;margin:0"><select class="field" id="pmRole" style="flex:1;margin:0">${opts.map(r=>`<option value="${r}">${ROLE_AR[r]}</option>`).join("")}</select><button class="btn main" id="assignBtn">تعيين</button></div></div>`;
+  const members = [...usersList].sort(byNew).map(u => {
     const can = u.id !== user.uid && opts.includes(u.role);
     return `<div class="item row" style="justify-content:space-between"><div><b>${esc(u.name||"بدون اسم")}</b><br><small class="note">${esc(u.email)}</small></div>${can?`<select class="field" style="width:auto;margin:0" data-role="${u.id}">${opts.map(r=>`<option value="${r}" ${u.role===r?"selected":""}>${ROLE_AR[r]}</option>`).join("")}</select>`:`<span class="badge ${u.role}">${ROLE_AR[u.role]||u.role}</span>`}</div>`;
-  }).join("") || empty);
+  }).join("") || empty;
+  const wait = pending.length ? `<h3 style="margin:18px 0 10px">صلاحيات معلّقة (لسه ما سجّلوش دخول)</h3>` + pending.map(g => `<div class="item row" style="justify-content:space-between"><div dir="ltr">${esc(g.id)}</div><div class="row"><span class="badge ${g.role}">${ROLE_AR[g.role]||g.role}</span>${role==="owner"?`<button class="btn red sm" data-delgrant="${esc(g.id)}">حذف</button>`:""}</div></div>`).join("") : "";
+  return form + `<h3 style="margin:18px 0 10px">الأعضاء</h3>` + members + wait;
 }
 function tabProducts() {
   return `<div class="row"><input class="field" id="pName" placeholder="اسم المنتج" style="flex:2"><input class="field" id="pPrice" type="number" min="0" placeholder="السعر بالجنيه" style="flex:1"></div><textarea class="field" id="pDesc" placeholder="وصف المنتج"></textarea><label class="note"><input type="checkbox" id="pHot"> علامة "الأكثر طلباً"</label><br><br><button class="btn main" id="addProduct">إضافة المنتج</button><hr style="border:0;border-top:1px solid var(--line);margin:22px 0">` +
@@ -466,12 +466,55 @@ function tabProducts() {
 function tabPayments() {
   return payEdit.map((m,i)=>`<div class="row"><input class="field" style="flex:1" data-pi="${i}" data-f="name" value="${esc(m.name)}" placeholder="الاسم (مثلاً فودافون كاش)"><input class="field" style="flex:2" data-pi="${i}" data-f="details" value="${esc(m.details)}" placeholder="الرقم أو التفاصيل"><button class="btn red sm" data-delpay="${i}" style="margin-bottom:10px">حذف</button></div>`).join("") + `<div class="row"><button class="btn ghost" id="addPay">إضافة طريقة</button><button class="btn main" id="savePay">حفظ</button></div>`;
 }
-function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); }
+function renderAll() { renderAuth(); renderProducts(); renderPayments(); renderSupport(); renderPanel(); renderChatUI(); }
+
+/* ---------- الشات ---------- */
+function renderChatUI() {
+  $("chatFab").hidden = !$("adminMain").hidden;
+  const box = $("chatBox");
+  if (!user) { box.hidden = true; $("chatDot").hidden = true; return; }
+  const open = !box.hidden, last = chatMsgs[chatMsgs.length - 1], key = "ba_chat_" + user.uid;
+  if (open) { try { localStorage.setItem(key, String(Date.now())); } catch (_) {} }
+  let seen = 0; try { seen = +localStorage.getItem(key) || 0; } catch (_) {}
+  $("chatDot").hidden = open || !(last && last.staff && ms(last.createdAt) > seen);
+  if (open) {
+    const el = $("chatMsgs");
+    el.innerHTML = chatMsgs.length ? chatMsgs.map(m => msgHTML(m, m.uid === user.uid)).join("") : '<p class="note" style="text-align:center">ابعت رسالتك وهترد عليك الإدارة هنا.</p>';
+    el.scrollTop = el.scrollHeight;
+  }
+}
+function toggleChat(on) {
+  if (!user) return login();
+  const box = $("chatBox"); box.hidden = on === undefined ? !box.hidden : !on;
+  renderChatUI(); if (!box.hidden) $("chatIn").focus();
+}
+async function sendChat(inp, target) {
+  const text = inp.value.trim(); if (!text) return;
+  const uid = target || user.uid, mine = uid === user.uid; inp.value = "";
+  await addDoc(collection(db,"chats",uid,"messages"), {uid:user.uid, name:user.displayName||user.email, role, staff:RANK[role]>=1, text, createdAt:serverTimestamp()});
+  const meta = {lastText:text.slice(0,80), lastAt:serverTimestamp(), lastFrom: mine ? "user" : "staff"};
+  if (mine) Object.assign(meta, {uid, email:user.email, name:user.displayName||""});
+  await setDoc(doc(db,"chats",uid), meta, {merge:true});
+}
+
+/* ---------- تعيين صلاحية بالإيميل ---------- */
+async function assignRole() {
+  const email = $("pmEmail").value.trim().toLowerCase(), r = $("pmRole").value;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say("اكتب إيميل صحيح");
+  if (email === OWNER_EMAIL) return say("ده إيميل الأونر");
+  const u = usersList.find(x => (x.email || "").toLowerCase() === email);
+  if (u && (u.id === user.uid || !(role === "owner" ? ["buyer","support","admin"] : ["buyer","support"]).includes(u.role))) return say("مش مسموح لك تغيّر صلاحية الشخص ده");
+  await setDoc(doc(db,"grants",email), {role:r, by:user.email, updatedAt:serverTimestamp()});
+  if (u) await updateDoc(doc(db,"users",u.id), {role:r});
+  $("pmEmail").value = ""; say("تم تعيين الصلاحية: " + ROLE_AR[r]);
+}
 
 /* ---------- التبديل بين الموقع والإدارة ---------- */
 function showAdmin(on) {
   if (on && !(user && RANK[role] >= 1)) return;
   $("top").hidden = on; $("adminMain").hidden = !on;
+  if (on) $("chatBox").hidden = true;
+  renderChatUI();
   $("adminLink").style.textDecoration = on ? "underline" : "";
   window.scrollTo(0, 0);
 }
@@ -496,9 +539,17 @@ document.addEventListener("click", e => {
   if (q("[data-login]")) return login();
   if (q("#logout")) return signOut(auth);
   if (q("[data-close]") || t === $("modal")) { $("modal").hidden = true; return; }
+  if (q("#chatFab")) return toggleChat();
+  if (q("#chatClose")) return toggleChat(false);
+  if (q("#chatSend")) return run(() => sendChat($("chatIn")));
+  if (q("#stSend")) return run(() => sendChat($("stIn"), curChat));
+  if (q("#assignBtn")) return run(assignRole);
   let b;
+  if ((b = q("[data-chat]"))) return openStaffChat(b.dataset.chat);
+  if ((b = q("[data-of]"))) { orderFilter = b.dataset.of; return renderTab(true); }
+  if ((b = q("[data-delgrant]"))) return confirm("تحذف الصلاحية المعلّقة؟") && run(() => deleteDoc(doc(db,"grants",b.dataset.delgrant)));
   if ((b = q("[data-buy]"))) { const p = curProducts().find(x => String(x.id) === b.dataset.buy); return p && openBuy(p); }
-  if ((b = q("[data-tab]"))) { curTab = b.dataset.tab; if (curTab === "payments") payEdit = pay.map(x=>({...x})); return renderPanel(); }
+  if ((b = q("[data-tab]"))) { curTab = b.dataset.tab; if (curTab === "payments") payEdit = pay.map(x=>({...x})); return renderPanel(true); }
   if ((b = q("[data-reply]"))) return run(async () => {
     const id = b.dataset.reply, inp = document.querySelector(`[data-rt="${id}"]`), text = inp.value.trim();
     if (!text) return;
@@ -539,6 +590,12 @@ document.addEventListener("input", e => {
   if (t.dataset.pi !== undefined) payEdit[+t.dataset.pi][t.dataset.f] = t.value;
 });
 
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || e.shiftKey) return;
+  if (e.target.id === "chatIn") $("chatSend").click();
+  if (e.target.id === "stIn") $("stSend").click();
+});
+
 /* ---------- الاتصال بقاعدة البيانات ---------- */
 renderAll();
 if (ok) {
@@ -553,13 +610,15 @@ if (ok) {
   } catch(_) {}
 
   onAuthStateChanged(auth, async u => {
-    unsubs.forEach(f => f()); unsubs = [];
-    user = u; role = "buyer"; myTickets = myOrders = staffTickets = orders = usersList = [];
+    unsubs.forEach(f => f()); unsubs = []; chatUnsub && chatUnsub(); chatUnsub = null; curChat = null;
+    user = u; role = "buyer"; myTickets = myOrders = staffTickets = orders = usersList = grants = chatList = chatMsgs = staffMsgs = [];
     if (u) {
       try {
         const isOwner = u.email === OWNER_EMAIL, ref = doc(db,"users",u.uid), snap = await getDoc(ref);
         if (!snap.exists()) {
-          role = isOwner ? "owner" : "buyer";
+          role = "buyer";
+          if (isOwner) role = "owner";
+          else { try { const g = await getDoc(doc(db,"grants",u.email.toLowerCase())); if (g.exists() && g.data().role in RANK) role = g.data().role; } catch (_) {} }
           await setDoc(ref, {email:u.email, name:u.displayName||"", photo:u.photoURL||"", role, createdAt:serverTimestamp()});
         } else {
           role = snap.data().role || "buyer";
@@ -569,10 +628,15 @@ if (ok) {
       const r = RANK[role];
       sub(query(collection(db,"tickets"), where("uid","==",u.uid)), s => { myTickets = list(s); renderSupport(); });
       sub(query(collection(db,"orders"), where("uid","==",u.uid)), s => { myOrders = list(s); renderSupport(); });
-      if (r >= 1) sub(collection(db,"tickets"), s => { staffTickets = list(s); renderPanel(); });
+      sub(query(collection(db,"chats",u.uid,"messages"), orderBy("createdAt")), s => { chatMsgs = listE(s); renderChatUI(); });
+      if (r >= 1) {
+        sub(collection(db,"tickets"), s => { staffTickets = list(s); renderPanel(); });
+        sub(collection(db,"chats"), s => { chatList = list(s); renderPanel(); updateStaffChat(); });
+      }
       if (r >= 2) {
-        sub(collection(db,"orders"), s => { orders = list(s); if (curTab==="orders") renderTab(); });
-        sub(collection(db,"users"), s => { usersList = list(s); if (curTab==="users") renderTab(); });
+        sub(collection(db,"orders"), s => { orders = list(s); renderPanel(); });
+        sub(collection(db,"users"), s => { usersList = list(s); if (curTab==="perms") renderTab(); });
+        sub(collection(db,"grants"), s => { grants = list(s); if (curTab==="perms") renderTab(); });
         sub(doc(db,"stats","visits"), s => { $("visits").textContent = num(s.exists() ? s.data().count : 0); });
       }
     }
