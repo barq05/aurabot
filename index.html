@@ -175,6 +175,9 @@ textarea.field{min-height:100px;resize:vertical}
 .online{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#2a117088;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:12px 0 16px}
 .pill{display:inline-flex;align-items:center;gap:6px;background:#150538;border:1px solid var(--line);border-radius:99px;padding:3px 12px 3px 4px;font-size:.88rem}
 .pill img{width:22px;height:22px;border-radius:50%}
+.card.price s{color:var(--mute);font-size:1.1rem;margin-inline-end:6px}
+.tag.sale{inset-inline-start:auto;inset-inline-end:22px;background:#f43f5e;color:#fff}
+.gift{background:linear-gradient(135deg,#7c3aed33,#e879f933);border:1px dashed var(--pink);border-radius:12px;padding:6px 12px;margin:6px 0 2px;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -336,7 +339,7 @@ const listE = s => s.docs.map(d => ({id:d.id, ...d.data({serverTimestamps:"estim
 const hm = t => { const v = t?.toMillis?.() ?? t ?? 0; return v ? new Date(v).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}) : ""; };
 const ms = t => t?.toMillis?.() ?? t ?? 0;
 const say = m => { const t = $("toast"); t.textContent = m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), 2600); };
-const run = fn => fn().catch(e => { console.error(e); say("ما نفعش: " + (e.code || e.message)); });
+const run = fn => fn().catch(e => { console.error(e); const c = e.code || e.message; say(c === "permission-denied" ? "ممنوع (permission-denied): اتأكد إنك نشرت آخر قواعد Firestore" : "ما نفعش: " + c); });
 const safeSet = (el, html) => { if (el.contains(document.activeElement) && document.activeElement.value) return; el.innerHTML = html; };
 
 const DEF_PRODUCTS = [
@@ -398,8 +401,19 @@ function renderAuth() {
   $("visitsBox").hidden = !(user && RANK[role] >= 2);
 }
 const curProducts = () => products.length ? products : DEF_PRODUCTS;
+const discActive = p => Number(p.discountValue) > 0 && !!p.discountType && (!p.discountEnds || ms(p.discountEnds) > Date.now());
+const finalPrice = p => {
+  const base = Number(p.price) || 0; if (!discActive(p)) return base;
+  const v = Number(p.discountValue), f = p.discountType === "percent" ? base * (1 - Math.min(v, 100) / 100) : base - v;
+  return Math.max(0, Math.round(f * 100) / 100);
+};
+const discLabel = p => p.discountType === "percent" ? `خصم ${num(p.discountValue)}%` : `خصم ${num(p.discountValue)} ج.م`;
+const fmtDate = t => new Date(ms(t)).toLocaleString("ar-EG", {dateStyle:"medium", timeStyle:"short"});
 function renderProducts() {
-  $("products").innerHTML = curProducts().map(p => `<div class="card price ${p.hot?"hot":""}">${p.hot?'<span class="tag">الأكثر طلباً</span>':""}<h3>${esc(p.name)}</h3><div class="amt">${num(p.price)} <small>ج.م</small></div><p class="d">${esc(p.desc)}</p><button class="btn ${p.hot?"main":"ghost"}" data-buy="${esc(p.id)}">اشتري</button></div>`).join("");
+  $("products").innerHTML = curProducts().map(p => {
+    const act = discActive(p);
+    return `<div class="card price ${p.hot?"hot":""}">${p.hot?'<span class="tag">الأكثر طلباً</span>':""}${act?`<span class="tag sale">${discLabel(p)}</span>`:""}<h3>${esc(p.name)}</h3><div class="amt">${act?`<s>${num(p.price)}</s>`:""}${num(finalPrice(p))} <small>ج.م</small></div>${act&&p.discountEnds?`<small class="note" style="margin-top:-4px">العرض ينتهي ${fmtDate(p.discountEnds)}</small>`:""}${p.giftName?`<div class="gift">🎁 هدية مجانية: <b>${esc(p.giftName)}</b></div>`:""}<p class="d">${esc(p.desc)}</p><button class="btn ${p.hot?"main":"ghost"}" data-buy="${esc(p.id)}">اشتري</button></div>`;
+  }).join("");
 }
 function renderPayments() {
   $("payList").innerHTML = pay.map(m => `<div class="card"><div class="ic">💳</div><h3>${esc(m.name)}</h3><p style="direction:ltr;text-align:right">${esc(m.details)}</p></div>`).join("");
@@ -411,7 +425,7 @@ const byNew = (a, b) => ms(b.createdAt) - ms(a.createdAt);
 function renderSupport() {
   $("tkLogin").hidden = !!user; $("tkForm").hidden = !user;
   safeSet($("myTickets"), !user ? '<p class="note">سجّل دخول لعرض تذاكرك.</p>' : ([...myTickets].sort(byNew).map(t=>ticketHTML(t,false)).join("") || '<p class="note">مفيش تذاكر لسه.</p>'));
-  $("myOrders").innerHTML = user && myOrders.length ? `<h3 style="margin-bottom:10px">طلباتي</h3>` + [...myOrders].sort(byNew).map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><span class="badge ${o.status==="cancelled"?"closed":""}">${ORDER_AR[o.status]||o.status}</span></div><small class="note">${sid(o.id)} · ${esc(o.method)}${o.claimedByName?" · ✅ استلمه: "+esc(o.claimedByName):" · في انتظار استلام فريقنا"}</small><div class="row" style="margin-top:8px"><button class="btn main sm" data-oc="${o.id}">💬 تواصل بخصوص الطلب${attn(o)?'<i class="dot"></i>':""}</button></div></div>`).join("") : "";
+  $("myOrders").innerHTML = user && myOrders.length ? `<h3 style="margin-bottom:10px">طلباتي</h3>` + [...myOrders].sort(byNew).map(o => `<div class="item"><div class="row" style="justify-content:space-between"><b>${esc(o.productName)} · ${num(o.price)} ج.م</b><span class="badge ${o.status==="cancelled"?"closed":""}">${ORDER_AR[o.status]||o.status}</span></div><small class="note">${sid(o.id)} · ${esc(o.method)}${o.giftName?" · 🎁 هدية: "+esc(o.giftName):""}${o.claimedByName?" · ✅ استلمه: "+esc(o.claimedByName):" · في انتظار استلام فريقنا"}</small><div class="row" style="margin-top:8px"><button class="btn main sm" data-oc="${o.id}">💬 تواصل بخصوص الطلب${attn(o)?'<i class="dot"></i>':""}</button></div></div>`).join("") : "";
   const nAttn = user ? myOrders.filter(attn).length : 0, sl = document.querySelector('.links a[href="#support"]');
   if (sl) sl.textContent = "الدعم" + (nAttn ? ` (${num(nAttn)})` : "");
 }
@@ -458,7 +472,10 @@ function tabOrders() {
     const claim = !o.claimedBy
       ? `<button class="btn main sm" data-claim="${o.id}">📥 استلام الطلب</button>`
       : `<span class="badge support">استلمه: ${esc(o.claimedByName||"")}</span>${(mine || RANK[role] >= 3) ? `<button class="btn ghost sm" data-release="${o.id}">إلغاء الاستلام</button>` : ""}`;
-    return `<div class="item"><div class="row" style="justify-content:space-between"><b>${sid(o.id)} · ${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small><div class="row" style="margin-top:10px">${claim}<button class="btn ghost sm" data-oc="${o.id}">💬 محادثة العميل${o.lastFrom==="user"?'<i class="dot"></i>':""}</button>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div>${o.lastText?`<small class="note">آخر رسالة: ${esc(o.lastText)}</small>`:""}</div>`;
+    const cur = products.find(x => x.id === o.productId);
+    const extra = ((o.discountLabel || o.giftName) ? `<div class="note">${o.discountLabel?"🏷️ "+esc(o.discountLabel)+(o.giftName?" · ":""):""}${o.giftName?"🎁 هدية: "+esc(o.giftName):""}</div>` : "")
+      + (cur && Number(o.price) !== finalPrice(cur) ? `<div class="note" style="color:#fbbf24">⚠️ راجع السعر: سعر المنتج الحالي ${num(finalPrice(cur))} ج.م</div>` : "");
+    return `<div class="item"><div class="row" style="justify-content:space-between"><b>${sid(o.id)} · ${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small>${extra}<div class="row" style="margin-top:10px">${claim}<button class="btn ghost sm" data-oc="${o.id}">💬 محادثة العميل${o.lastFrom==="user"?'<i class="dot"></i>':""}</button>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div>${o.lastText?`<small class="note">آخر رسالة: ${esc(o.lastText)}</small>`:""}</div>`;
   }).join("") || empty);
 }
 const msgHTML = (m, mine) => `<div class="msg ${mine?"me":"them"}"><small>${esc(m.name||"")}${m.role&&RANK[m.role]>=1?" · "+ROLE_AR[m.role]:""}</small>${esc(m.text)}<time>${hm(m.createdAt)}</time></div>`;
@@ -499,9 +516,28 @@ function tabSite() {
    + `<div class="item"><b>قسم التواصل</b>` + f("contactTitle","العنوان") + f("contactText","النص") + `</div>`
    + `<div class="row"><button class="btn main" id="saveSite">حفظ الموقع</button><button class="btn ghost" id="resetSite">رجوع للافتراضي</button><button class="btn red" id="resetVisits">تصفير عداد الزيارات</button></div>`;
 }
+const typeOpts = sel => [["","بدون خصم"],["percent","نسبة %"],["fixed","مبلغ ثابت (ج.م)"]].map(([v, l]) => `<option value="${v}" ${sel===v?"selected":""}>${l}</option>`).join("");
+const giftOpts = (sel, ex) => `<option value="">بدون هدية</option>` + products.filter(x => x.id !== ex).map(x => `<option value="${esc(x.id)}" ${sel===x.id?"selected":""}>${esc(x.name)}</option>`).join("");
+const toLocalInput = t => { const v = ms(t); if (!v) return ""; return new Date(v - new Date(v).getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+function offerFields(p, ex) {
+  return `<div class="row" style="margin:8px 0;align-items:flex-end"><div style="flex:1;min-width:130px"><label class="note">الخصم</label><select class="field" style="margin:0" data-pf="discountType">${typeOpts(p.discountType||"")}</select></div><div style="flex:1;min-width:100px"><label class="note">قيمة الخصم</label><input class="field" style="margin:0" type="number" min="0" data-pf="discountValue" value="${esc(p.discountValue||"")}"></div><div style="flex:1.4;min-width:190px"><label class="note">ينتهي (اختياري)</label><input class="field" style="margin:0" type="datetime-local" data-pf="discountEnds" value="${toLocalInput(p.discountEnds)}"></div><div style="flex:1.4;min-width:170px"><label class="note">🎁 منتج هدية</label><select class="field" style="margin:0" data-pf="giftId">${giftOpts(p.giftId||"", ex)}</select></div></div>`;
+}
+function readProduct(row) {
+  const g = k => row.querySelector(`[data-pf="${k}"]`);
+  const name = g("name").value.trim(), ps = g("price").value, price = Number(ps);
+  if (!name || ps === "" || !(price >= 0)) { say("اكتب الاسم والسعر"); return null; }
+  const dt = g("discountType").value, dv = Number(g("discountValue").value) || 0;
+  if (dt && !(dv > 0)) { say("اكتب قيمة الخصم"); return null; }
+  if (dt === "percent" && dv > 100) { say("النسبة لازم تكون بين 1 و100"); return null; }
+  if (dt === "fixed" && dv > price) { say("الخصم أكبر من السعر"); return null; }
+  const ev = g("discountEnds").value, ends = dt && ev ? new Date(ev).getTime() : 0;
+  const gp = products.find(x => x.id === g("giftId").value);
+  return {name, price, desc:g("desc").value.trim(), hot:g("hot").checked, discountType:dt, discountValue:dt?dv:0, discountEnds:ends, giftId:gp?gp.id:"", giftName:gp?gp.name:""};
+}
 function tabProducts() {
-  return `<div class="row"><input class="field" id="pName" placeholder="اسم المنتج" style="flex:2"><input class="field" id="pPrice" type="number" min="0" placeholder="السعر بالجنيه" style="flex:1"></div><textarea class="field" id="pDesc" placeholder="وصف المنتج"></textarea><label class="note"><input type="checkbox" id="pHot"> علامة "الأكثر طلباً"</label><br><br><button class="btn main" id="addProduct">إضافة المنتج</button><hr style="border:0;border-top:1px solid var(--line);margin:22px 0">` +
-  (products.map(p=>`<div class="item" data-pid="${p.id}"><div class="row"><input class="field" style="flex:2;margin:0" data-pf="name" value="${esc(p.name)}"><input class="field" style="flex:1;margin:0" data-pf="price" type="number" min="0" value="${esc(p.price)}"><label class="note"><input type="checkbox" data-pf="hot" ${p.hot?"checked":""}> الأكثر طلباً</label></div><textarea class="field" data-pf="desc" style="margin:8px 0">${esc(p.desc)}</textarea><div class="row"><button class="btn main sm" data-savep="${p.id}">حفظ</button><button class="btn red sm" data-delp="${p.id}">حذف</button></div></div>`).join("") || '<p class="note">مفيش منتجات مضافة، الموقع بيعرض منتجات تجريبية لحد ما تضيف.</p>');
+  const newForm = `<div class="item" id="newP"><b>منتج جديد</b><div class="row" style="margin-top:8px"><input class="field" style="flex:2;margin:0" data-pf="name" placeholder="اسم المنتج"><input class="field" style="flex:1;margin:0" data-pf="price" type="number" min="0" placeholder="السعر بالجنيه"></div><textarea class="field" data-pf="desc" style="margin:8px 0" placeholder="وصف المنتج"></textarea><label class="note"><input type="checkbox" data-pf="hot"> علامة "الأكثر طلباً"</label>${offerFields({}, "")}<button class="btn main" id="addProduct">إضافة المنتج</button></div>`;
+  const rows = products.map(p => `<div class="item" data-pid="${p.id}"><div class="row"><input class="field" style="flex:2;margin:0" data-pf="name" value="${esc(p.name)}"><input class="field" style="flex:1;margin:0" data-pf="price" type="number" min="0" value="${esc(p.price)}"><label class="note"><input type="checkbox" data-pf="hot" ${p.hot?"checked":""}> الأكثر طلباً</label></div><textarea class="field" data-pf="desc" style="margin:8px 0">${esc(p.desc)}</textarea>${offerFields(p, p.id)}<div class="row"><button class="btn main sm" data-savep="${p.id}">حفظ</button><button class="btn red sm" data-delp="${p.id}">حذف</button>${discActive(p)?`<span class="badge">السعر النهائي ${num(finalPrice(p))} ج.م</span>`:""}</div></div>`).join("");
+  return `<p class="note" style="margin-top:0">الخصم بيتوقف لوحده بعد تاريخ الانتهاء. المنتج الهدية بيظهر على الكارت وبيتسجل في الطلب.</p>` + newForm + `<h3 style="margin:18px 0 10px">المنتجات الحالية</h3>` + (rows || '<p class="note">مفيش منتجات مضافة، الموقع بيعرض منتجات تجريبية لحد ما تضيف.</p>');
 }
 function tabPayments() {
   return payEdit.map((m,i)=>`<div class="row"><input class="field" style="flex:1" data-pi="${i}" data-f="name" value="${esc(m.name)}" placeholder="الاسم (مثلاً فودافون كاش)"><input class="field" style="flex:2" data-pi="${i}" data-f="details" value="${esc(m.details)}" placeholder="الرقم أو التفاصيل"><button class="btn red sm" data-delpay="${i}" style="margin-bottom:10px">حذف</button></div>`).join("") + `<div class="row"><button class="btn ghost" id="addPay">إضافة طريقة</button><button class="btn main" id="savePay">حفظ</button></div>`;
@@ -611,13 +647,20 @@ function closeModal() { $("modal").hidden = true; if (oc) { oc.unsub(); oc = nul
 function openOrderChat(id) {
   const o = [...orders, ...myOrders].find(x => x.id === id); if (!o) return;
   if (oc) oc.unsub();
-  $("modalBox").innerHTML = `<div class="row" style="justify-content:space-between"><h3>محادثة الطلب ${sid(id)}</h3><button class="btn ghost sm" data-close>✕</button></div><small class="note">${esc(o.productName)} · ${ORDER_AR[o.status]||o.status}${o.claimedByName?" · استلمه: "+esc(o.claimedByName):""}</small><div id="ocThr" class="chat-b" style="height:300px;margin:12px 0"></div><div class="row"><input class="field" id="ocIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رسالتك"><button class="btn main sm" id="ocSend">إرسال</button></div>`;
+  $("modalBox").innerHTML = `<div class="row" style="justify-content:space-between"><h3>محادثة الطلب ${sid(id)}</h3><button class="btn ghost sm" data-close>✕</button></div><small class="note" id="ocSub"></small><div id="ocThr" class="chat-b" style="height:300px;margin:12px 0"></div><div class="row"><input class="field" id="ocIn" style="flex:1;margin:0" maxlength="1000" placeholder="اكتب رسالتك"><button class="btn main sm" id="ocSend">إرسال</button></div>`;
   $("modal").hidden = false;
   oc = {id, msgs:[], unsub:() => {}};
-  oc.unsub = onSnapshot(query(collection(db,"orders",id,"messages"), orderBy("createdAt")), s => { oc.msgs = listE(s); renderOC(); }, e => say("ما نفعش: " + e.code));
+  renderOCHead();
+  oc.unsub = onSnapshot(query(collection(db,"orders",id,"messages"), orderBy("createdAt")), s => { oc.msgs = listE(s); renderOC(); }, e => say(e.code === "permission-denied" ? "ممنوع: انشر آخر قواعد Firestore (firestore.rules)" : "ما نفعش: " + e.code));
   try { localStorage.setItem("ba_oc_" + user.uid + "_" + id, String(Date.now())); } catch (_) {}
 }
+function renderOCHead() {
+  if (!oc || !$("ocSub")) return;
+  const o = [...orders, ...myOrders].find(x => x.id === oc.id); if (!o) return;
+  $("ocSub").textContent = `${o.productName} · ${ORDER_AR[o.status]||o.status}${o.claimedByName?" · استلمه: "+o.claimedByName:""}`;
+}
 function renderOC() {
+  renderOCHead();
   const t = $("ocThr"); if (!t || !oc) return;
   t.innerHTML = oc.msgs.map(m => msgHTML(m, m.uid === user.uid)).join("") || '<p class="note" style="text-align:center">ابدأ المحادثة بخصوص الطلب.</p>';
   t.scrollTop = t.scrollHeight;
@@ -645,11 +688,12 @@ async function claimOrder(id) {
 /* ---------- شراء ---------- */
 function openBuy(p) {
   if (!user) return login();
-  $("modalBox").innerHTML = `<h3>شراء: ${esc(p.name)}</h3><p>السعر: <b>${num(p.price)} ج.م</b></p><p class="note">اختار طريقة الدفع، حوّل المبلغ، وبعدين أكّد الطلب.</p>${pay.map((m,i)=>`<label class="pm"><input type="radio" name="pm" value="${i}" ${i===0?"checked":""}><b>${esc(m.name)}</b><small>${esc(m.details)}</small></label>`).join("")}<input class="field" id="onote" maxlength="200" placeholder="رقم العملية أو ملاحظة (اختياري)"><div class="row"><button class="btn main" id="confirmBuy">تأكيد الطلب</button><button class="btn ghost" data-close>إلغاء</button></div>`;
+  const act = discActive(p), fp = finalPrice(p);
+  $("modalBox").innerHTML = `<h3>شراء: ${esc(p.name)}</h3><p>السعر: ${act?`<s style="color:var(--mute)">${num(p.price)}</s> `:""}<b>${num(fp)} ج.م</b>${act?` · ${discLabel(p)}`:""}</p>${p.giftName?`<p class="gift">🎁 معاك هدية: <b>${esc(p.giftName)}</b></p>`:""}<p class="note">اختار طريقة الدفع، حوّل المبلغ، وبعدين أكّد الطلب.</p>${pay.map((m,i)=>`<label class="pm"><input type="radio" name="pm" value="${i}" ${i===0?"checked":""}><b>${esc(m.name)}</b><small>${esc(m.details)}</small></label>`).join("")}<input class="field" id="onote" maxlength="200" placeholder="رقم العملية أو ملاحظة (اختياري)"><div class="row"><button class="btn main" id="confirmBuy">تأكيد الطلب</button><button class="btn ghost" data-close>إلغاء</button></div>`;
   $("modal").hidden = false;
   $("confirmBuy").onclick = () => run(async () => {
     const m = pay[+document.querySelector('input[name=pm]:checked').value];
-    const oref = await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:Number(p.price), method:m.name, note:$("onote").value.trim(), status:"pending", createdAt:serverTimestamp()});
+    const oref = await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:fp, listPrice:Number(p.price), giftName:p.giftName||"", discountLabel:act?discLabel(p):"", method:m.name, note:$("onote").value.trim(), status:"pending", createdAt:serverTimestamp()});
     $("modalBox").innerHTML = `<h3>تم تسجيل طلبك ✅</h3><p class="note">رقم الطلب ${sid(oref.id)}. في انتظار استلامه من فريقنا، وهتوصلك إشارة هنا أول ما حد يستلمه. تقدر تبعت رسالة أو إيصال الدفع من المحادثة.</p><div class="row"><button class="btn main" data-oc="${oref.id}">💬 تواصل بخصوص الطلب</button><button class="btn ghost" data-close>تمام</button></div>`;
   });
 }
@@ -676,10 +720,8 @@ document.addEventListener("click", e => {
   if ((b = q("[data-delt]"))) return confirm("تحذف التذكرة نهائياً؟") && run(() => deleteDoc(doc(db,"tickets",b.dataset.delt)));
   if ((b = q("[data-delo]"))) return confirm("تحذف الطلب ومحادثته نهائياً؟") && run(async () => { const s = await getDocs(collection(db,"orders",b.dataset.delo,"messages")); await Promise.all(s.docs.map(d => deleteDoc(d.ref))); await deleteDoc(doc(db,"orders",b.dataset.delo)); });
   if ((b = q("[data-savep]"))) return run(async () => {
-    const row = b.closest("[data-pid]"), g = k => row.querySelector(`[data-pf="${k}"]`);
-    const name = g("name").value.trim(), price = Number(g("price").value);
-    if (!name || !(price >= 0) || g("price").value === "") return say("اكتب الاسم والسعر");
-    await updateDoc(doc(db,"products",b.dataset.savep), {name, price, desc:g("desc").value.trim(), hot:g("hot").checked});
+    const d = readProduct(b.closest("[data-pid]")); if (!d) return;
+    await updateDoc(doc(db,"products",b.dataset.savep), d);
     say("تم حفظ المنتج");
   });
   if ((b = q("[data-adda]"))) { siteEdit[b.dataset.adda].push(b.dataset.adda === "faq" ? {q:"", a:""} : {icon:"✨", title:"", text:""}); return renderTab(true); }
@@ -699,9 +741,8 @@ document.addEventListener("click", e => {
     await updateDoc(doc(db,"tickets",tk.id), {status: tk.status === "open" ? "closed" : "open"});
   });
   if (q("#addProduct")) return run(async () => {
-    const name = $("pName").value.trim(), price = Number($("pPrice").value);
-    if (!name || !(price >= 0) || $("pPrice").value === "") return say("اكتب الاسم والسعر");
-    await addDoc(collection(db,"products"), {name, desc:$("pDesc").value.trim(), price, hot:$("pHot").checked, createdAt:serverTimestamp()});
+    const d = readProduct($("newP")); if (!d) return;
+    await addDoc(collection(db,"products"), {...d, createdAt:serverTimestamp()});
     say("تمت إضافة المنتج"); renderTab(true);
   });
   if ((b = q("[data-delp]"))) return confirm("تحذف المنتج؟") && run(() => deleteDoc(doc(db,"products",b.dataset.delp)));
@@ -738,11 +779,12 @@ document.addEventListener("keydown", e => {
 
 /* ---------- الاتصال بقاعدة البيانات ---------- */
 renderAll();
+setInterval(renderProducts, 60000);
 if (ok) {
   const sub = (ref, fn) => unsubs.push(onSnapshot(ref, fn, e => console.warn(e.code)));
   const list = s => s.docs.map(d => ({id:d.id, ...d.data()}));
 
-  onSnapshot(collection(db,"products"), s => { products = list(s); renderProducts(); if (curTab==="products") renderTab(); });
+  onSnapshot(collection(db,"products"), s => { products = list(s).sort((a, b) => ms(a.createdAt) - ms(b.createdAt)); renderProducts(); if (curTab==="products") renderTab(); });
   onSnapshot(doc(db,"settings","site"), s => { site = s.exists() ? {...DEF_SITE, ...s.data()} : DEF_SITE; renderSite(); }, e => console.warn(e.code));
   onSnapshot(doc(db,"settings","payments"), s => { pay = (s.exists() && s.data().methods?.length) ? s.data().methods : DEF_PAY; renderPayments(); });
 
@@ -778,7 +820,7 @@ if (ok) {
       if (role === "banned") { renderAll(); return; }
       const r = RANK[role];
       sub(query(collection(db,"tickets"), where("uid","==",u.uid)), s => { myTickets = list(s); renderSupport(); });
-      sub(query(collection(db,"orders"), where("uid","==",u.uid)), s => { myOrders = list(s); renderSupport(); });
+      sub(query(collection(db,"orders"), where("uid","==",u.uid)), s => { myOrders = list(s); renderSupport(); renderOCHead(); });
       if (r >= 1) {
         sub(collection(db,"tickets"), s => { staffTickets = list(s); renderPanel(); });
         sub(query(collection(db,"staffRoom"), orderBy("createdAt","desc"), limit(100)), s => { roomMsgs = listE(s).reverse(); renderPanel(); updateRoom(); });
@@ -786,7 +828,7 @@ if (ok) {
         startPresence();
       }
       if (r >= 2) {
-        sub(collection(db,"orders"), s => { orders = list(s); renderPanel(); });
+        sub(collection(db,"orders"), s => { orders = list(s); renderPanel(); renderOCHead(); });
         sub(collection(db,"users"), s => { usersList = list(s); if (curTab==="perms") renderTab(); });
         sub(collection(db,"grants"), s => { grants = list(s); if (curTab==="perms") renderTab(); });
         sub(doc(db,"stats","visits"), s => countTo($("visits"), s.exists() ? s.data().count : 0, false));
