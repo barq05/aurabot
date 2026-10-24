@@ -475,6 +475,7 @@ function tabOrders() {
       : `<span class="badge support">استلمه: ${esc(o.claimedByName||"")}</span>${(mine || RANK[role] >= 3) ? `<button class="btn ghost sm" data-release="${o.id}">إلغاء الاستلام</button>` : ""}`;
     const cur = products.find(x => x.id === o.productId);
     const extra = ((o.discountLabel || o.giftName) ? `<div class="note">${o.discountLabel?"🏷️ "+esc(o.discountLabel)+(o.giftName?" · ":""):""}${o.giftName?"🎁 هدية: "+esc(o.giftName):""}</div>` : "")
+      + (o.discordId ? `<div class="note" dir="ltr">🎮 Discord ID: ${esc(o.discordId)}</div>` : "")
       + (cur && Number(o.price) !== finalPrice(cur) ? `<div class="note" style="color:#fbbf24">⚠️ راجع السعر: سعر المنتج الحالي ${num(finalPrice(cur))} ج.م</div>` : "");
     return `<div class="item"><div class="row" style="justify-content:space-between"><b>${sid(o.id)} · ${esc(o.productName)} · ${num(o.price)} ج.م</b><select class="field" style="width:auto;margin:0" data-order="${o.id}">${Object.keys(ORDER_AR).map(s=>`<option value="${s}" ${o.status===s?"selected":""}>${ORDER_AR[s]}</option>`).join("")}</select></div><small class="note">${esc(o.name)} · ${esc(o.email)} · ${esc(o.method)}${o.note?" · "+esc(o.note):""}${ms(o.createdAt)?" · "+new Date(ms(o.createdAt)).toLocaleDateString("ar-EG"):""}</small>${extra}<div class="row" style="margin-top:10px">${claim}<button class="btn ghost sm" data-oc="${o.id}">💬 محادثة العميل${o.lastFrom==="user"?'<i class="dot"></i>':""}</button>${RANK[role]>=4?`<button class="btn red sm" data-delo="${o.id}">حذف</button>`:""}</div>${o.lastText?`<small class="note">آخر رسالة: ${esc(o.lastText)}</small>`:""}</div>`;
   }).join("") || empty);
@@ -496,10 +497,10 @@ function tabPerms() {
   const opts = assignable();
   const known = new Set(usersList.map(u => (u.email || "").toLowerCase()));
   const pending = grants.filter(g => !known.has(g.id));
-  const form = `<div class="item"><b>إعطاء صلاحية لشخص</b><p class="note" style="margin:4px 0 12px">اكتب جيميل الشخص واختار صلاحيته. لو ما سجّلش دخول لسه، الصلاحية بتتفعّل أول ما يسجّل.${role==="admin"?" الأدمن يقدر يعيّن مشتري أو دعم فني فقط.":""}</p><div class="row"><input class="field" id="pmEmail" type="email" dir="ltr" placeholder="name@gmail.com" style="flex:2;margin:0"><select class="field" id="pmRole" style="flex:1;margin:0">${opts.map(r=>`<option value="${r}">${ROLE_AR[r]}</option>`).join("")}</select><button class="btn main" id="assignBtn">تعيين</button></div></div>`;
+  const form = `<div class="item"><b>توظيف / إعطاء صلاحية</b><p class="note" style="margin:4px 0 12px">اكتب جيميل الشخص واختار صلاحيته. لو ما سجّلش دخول لسه، الصلاحية بتتفعّل أول ما يسجّل.${role==="admin"?" الأدمن يقدر يعيّن مشتري أو دعم فني فقط.":""}</p><div class="row"><input class="field" id="pmEmail" type="email" dir="ltr" placeholder="name@gmail.com" style="flex:2;margin:0"><select class="field" id="pmRole" style="flex:1;margin:0">${opts.map(r=>`<option value="${r}">${ROLE_AR[r]}</option>`).join("")}</select><button class="btn main" id="assignBtn">تعيين</button></div><input class="field" id="pmDiscord" inputmode="numeric" dir="ltr" maxlength="20" placeholder="Discord ID (اختياري، لإعطاء رتبة ديسكورد تلقائياً عن طريق البوت)" style="margin:10px 0 0"></div>`;
   const members = [...usersList].sort(byNew).map(u => {
     const can = u.id !== user.uid && opts.includes(u.role);
-    return `<div class="item row" style="justify-content:space-between"><div><b>${esc(u.name||"بدون اسم")}</b><br><small class="note">${esc(u.email)}</small></div>${can?`<select class="field" style="width:auto;margin:0" data-role="${u.id}">${opts.map(r=>`<option value="${r}" ${u.role===r?"selected":""}>${ROLE_AR[r]}</option>`).join("")}</select>`:`<span class="badge ${u.role}">${ROLE_AR[u.role]||u.role}</span>`}</div>`;
+    return `<div class="item row" style="justify-content:space-between"><div><b>${esc(u.name||"بدون اسم")}</b><br><small class="note">${esc(u.email)}</small></div>${can?`<div class="row"><select class="field" style="width:auto;margin:0" data-role="${u.id}">${opts.map(r=>`<option value="${r}" ${u.role===r?"selected":""}>${ROLE_AR[r]}</option>`).join("")}</select>${["support","admin","owner"].includes(u.role)?`<button class="btn red sm" data-fire="${u.id}">فصل</button>`:""}</div>`:`<span class="badge ${u.role}">${ROLE_AR[u.role]||u.role}</span>`}</div>`;
   }).join("") || empty;
   const wait = pending.length ? `<h3 style="margin:18px 0 10px">صلاحيات معلّقة (لسه ما سجّلوش دخول)</h3>` + pending.map(g => `<div class="item row" style="justify-content:space-between"><div dir="ltr">${esc(g.id)}</div><div class="row"><span class="badge ${g.role}">${ROLE_AR[g.role]||g.role}</span>${RANK[role]>=3?`<button class="btn red sm" data-delgrant="${esc(g.id)}">حذف</button>`:""}</div></div>`).join("") : "";
   return form + `<h3 style="margin:18px 0 10px">الأعضاء</h3>` + members + wait;
@@ -629,9 +630,11 @@ async function assignRole() {
   if (!assignable().includes(r)) return say("مش مسموح لك تعيّن الصلاحية دي");
   const u = usersList.find(x => (x.email || "").toLowerCase() === email);
   if (u && (u.id === user.uid || !assignable().includes(u.role))) return say("مش مسموح لك تغيّر صلاحية الشخص ده");
-  await setDoc(doc(db,"grants",email), {role:r, by:user.email, updatedAt:serverTimestamp()});
+  const did = $("pmDiscord").value.trim();
+  if (did && !/^\d{17,20}$/.test(did)) return say("Discord ID غلط: أرقام فقط (17 لـ 20 رقم)");
+  await setDoc(doc(db,"grants",email), {role:r, by:user.email, updatedAt:serverTimestamp(), ...(did ? {discordId:did} : {})}, {merge:true});
   if (u) await updateDoc(doc(db,"users",u.id), {role:r});
-  $("pmEmail").value = ""; say("تم تعيين الصلاحية: " + ROLE_AR[r]);
+  $("pmEmail").value = ""; $("pmDiscord").value = ""; say("تم تعيين الصلاحية: " + ROLE_AR[r]);
 }
 
 /* ---------- التبديل بين الموقع والإدارة ---------- */
@@ -690,11 +693,13 @@ async function claimOrder(id) {
 function openBuy(p) {
   if (!user) return login();
   const act = discActive(p), fp = finalPrice(p);
-  $("modalBox").innerHTML = `<h3>شراء: ${esc(p.name)}</h3><p>السعر: ${act?`<s style="color:var(--mute)">${num(p.price)}</s> `:""}<b>${num(fp)} ج.م</b>${act?` · ${discLabel(p)}`:""}</p>${p.giftName?`<p class="gift">🎁 معاك هدية: <b>${esc(p.giftName)}</b></p>`:""}<p class="note">اختار طريقة الدفع، حوّل المبلغ، وبعدين أكّد الطلب.</p>${pay.map((m,i)=>`<label class="pm"><input type="radio" name="pm" value="${i}" ${i===0?"checked":""}><b>${esc(m.name)}</b><small>${esc(m.details)}</small></label>`).join("")}<input class="field" id="onote" maxlength="200" placeholder="رقم العملية أو ملاحظة (اختياري)"><div class="row"><button class="btn main" id="confirmBuy">تأكيد الطلب</button><button class="btn ghost" data-close>إلغاء</button></div>`;
+  $("modalBox").innerHTML = `<h3>شراء: ${esc(p.name)}</h3><p>السعر: ${act?`<s style="color:var(--mute)">${num(p.price)}</s> `:""}<b>${num(fp)} ج.م</b>${act?` · ${discLabel(p)}`:""}</p>${p.giftName?`<p class="gift">🎁 معاك هدية: <b>${esc(p.giftName)}</b></p>`:""}<p class="note">اختار طريقة الدفع، حوّل المبلغ، وبعدين أكّد الطلب.</p>${pay.map((m,i)=>`<label class="pm"><input type="radio" name="pm" value="${i}" ${i===0?"checked":""}><b>${esc(m.name)}</b><small>${esc(m.details)}</small></label>`).join("")}<input class="field" id="onote" maxlength="200" placeholder="رقم العملية أو ملاحظة (اختياري)"><input class="field" id="odisc" inputmode="numeric" dir="ltr" maxlength="20" placeholder="Discord ID بتاعك (اختياري، عشان نبعتلك على ديسكورد)"><div class="row"><button class="btn main" id="confirmBuy">تأكيد الطلب</button><button class="btn ghost" data-close>إلغاء</button></div>`;
   $("modal").hidden = false;
   $("confirmBuy").onclick = () => run(async () => {
     const m = pay[+document.querySelector('input[name=pm]:checked').value];
-    const oref = await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:fp, listPrice:Number(p.price), giftName:p.giftName||"", discountLabel:act?discLabel(p):"", method:m.name, note:$("onote").value.trim(), status:"pending", createdAt:serverTimestamp()});
+    const did = $("odisc").value.trim();
+    if (did && !/^\d{17,20}$/.test(did)) return say("Discord ID غلط: أرقام فقط (17 لـ 20 رقم)");
+    const oref = await addDoc(collection(db,"orders"), {uid:user.uid, email:user.email, name:user.displayName||"", productId:String(p.id), productName:p.name, price:fp, listPrice:Number(p.price), giftName:p.giftName||"", discountLabel:act?discLabel(p):"", method:m.name, note:$("onote").value.trim(), ...(did ? {discordId:did} : {}), status:"pending", createdAt:serverTimestamp()});
     $("modalBox").innerHTML = `<h3>تم تسجيل طلبك ✅</h3><p class="note">رقم الطلب ${sid(oref.id)}. في انتظار استلامه من فريقنا، وهتوصلك إشارة هنا أول ما حد يستلمه. تقدر تبعت رسالة أو إيصال الدفع من المحادثة.</p><div class="row"><button class="btn main" data-oc="${oref.id}">💬 تواصل بخصوص الطلب</button><button class="btn ghost" data-close>تمام</button></div>`;
   });
 }
@@ -718,6 +723,12 @@ document.addEventListener("click", e => {
   if ((b = q("[data-oc]"))) return openOrderChat(b.dataset.oc);
   if ((b = q("[data-claim]"))) return run(() => claimOrder(b.dataset.claim));
   if ((b = q("[data-release]"))) return confirm("تلغي استلامك للطلب؟") && run(() => updateDoc(doc(db,"orders",b.dataset.release), {status:"pending", claimedBy:deleteField(), claimedByName:deleteField(), claimedAt:deleteField()}));
+  if ((b = q("[data-fire]"))) return confirm("تفصل الموظف ده (يرجع مشتري)؟") && run(async () => {
+    const u = usersList.find(x => x.id === b.dataset.fire); if (!u) return;
+    await setDoc(doc(db,"grants",(u.email || "").toLowerCase()), {role:"buyer", by:user.email, updatedAt:serverTimestamp()}, {merge:true});
+    await updateDoc(doc(db,"users",u.id), {role:"buyer"});
+    say("تم فصل الموظف");
+  });
   if ((b = q("[data-delt]"))) return confirm("تحذف التذكرة نهائياً؟") && run(() => deleteDoc(doc(db,"tickets",b.dataset.delt)));
   if ((b = q("[data-delo]"))) return confirm("تحذف الطلب ومحادثته نهائياً؟") && run(async () => { const s = await getDocs(collection(db,"orders",b.dataset.delo,"messages")); await Promise.all(s.docs.map(d => deleteDoc(d.ref))); await deleteDoc(doc(db,"orders",b.dataset.delo)); });
   if ((b = q("[data-savep]"))) return run(async () => {
@@ -763,7 +774,12 @@ document.addEventListener("click", e => {
 document.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.order) run(() => updateDoc(doc(db,"orders",t.dataset.order), {status:t.value}));
-  if (t.dataset.role) run(() => updateDoc(doc(db,"users",t.dataset.role), {role:t.value}).then(()=>say("تم تغيير الرتبة")));
+  if (t.dataset.role) run(async () => {
+    const u = usersList.find(x => x.id === t.dataset.role);
+    await updateDoc(doc(db,"users",t.dataset.role), {role:t.value});
+    if (u && u.email) await setDoc(doc(db,"grants",u.email.toLowerCase()), {role:t.value, by:user.email, updatedAt:serverTimestamp()}, {merge:true});
+    say("تم تغيير الرتبة");
+  });
 });
 document.addEventListener("input", e => {
   const t = e.target, d = t.dataset;
