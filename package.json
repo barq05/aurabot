@@ -1,0 +1,14 @@
+{
+  "name": "aurabot-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AURABOT store, customer site and admin dashboard (zero-dependency Node server).",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "bot": "node bot/index.js"
+  },
+  "engines": { "node": ">=22.13" },
+  "dependencies": { "discord.js": "^14.16.3" }
+}
